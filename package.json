@@ -1,0 +1,46 @@
+{
+  "name": "gh-setup-git-identity",
+  "version": "0.1.0",
+  "description": "A tool to setup git identity based on current gh user",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "gh-setup-git-identity": "src/cli.js"
+  },
+  "scripts": {
+    "test": "node --test test/index.test.js",
+    "test:bun": "bun test",
+    "test:deno": "deno test --allow-all",
+    "lint": "node --check src/index.js && node --check src/cli.js",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish"
+  },
+  "keywords": [
+    "github",
+    "git",
+    "identity",
+    "config",
+    "cli",
+    "setup"
+  ],
+  "author": "Link Foundation",
+  "license": "Unlicense",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/link-foundation/gh-setup-git-identity.git"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "lino-arguments": "^0.2.1",
+    "log-lazy": "^1.0.4",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.5.1",
+    "@changesets/cli": "^2.29.7",
+    "test-anywhere": "^0.7.0"
+  }
+}
