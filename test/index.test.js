@@ -24,7 +24,8 @@ const silentLogger = {
 };
 
 // Test: isGhAuthenticated function exists and returns boolean
-test('isGhAuthenticated - returns a boolean', async () => {
+// Use higher timeout for Windows where gh auth status can be slow
+test('isGhAuthenticated - returns a boolean', { timeout: 30000 }, async () => {
   const result = await isGhAuthenticated({ logger: silentLogger });
   assert.equal(typeof result, 'boolean');
 });
@@ -44,7 +45,8 @@ test('verifyGitIdentity - returns object with username and email', async () => {
 });
 
 // Integration tests - only run if authenticated
-test('getGitHubUsername - returns username when authenticated', async () => {
+// Use higher timeout for Windows where commands can be slow
+test('getGitHubUsername - returns username when authenticated', { timeout: 30000 }, async () => {
   const isAuth = await isGhAuthenticated({ logger: silentLogger });
   if (!isAuth) {
     console.log('Skipping test: gh not authenticated');
@@ -56,7 +58,7 @@ test('getGitHubUsername - returns username when authenticated', async () => {
   assert.ok(username.length > 0);
 });
 
-test('getGitHubEmail - returns email when authenticated', async () => {
+test('getGitHubEmail - returns email when authenticated', { timeout: 30000 }, async () => {
   const isAuth = await isGhAuthenticated({ logger: silentLogger });
   if (!isAuth) {
     console.log('Skipping test: gh not authenticated');
@@ -68,7 +70,7 @@ test('getGitHubEmail - returns email when authenticated', async () => {
   assert.ok(email.includes('@'));
 });
 
-test('getGitHubUserInfo - returns user info when authenticated', async () => {
+test('getGitHubUserInfo - returns user info when authenticated', { timeout: 30000 }, async () => {
   const isAuth = await isGhAuthenticated({ logger: silentLogger });
   if (!isAuth) {
     console.log('Skipping test: gh not authenticated');
