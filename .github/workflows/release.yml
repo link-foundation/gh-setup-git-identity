@@ -137,6 +137,10 @@ jobs:
         with:
           deno-version: v2.x
 
+      - name: Install dependencies (Deno)
+        if: matrix.runtime == 'deno'
+        run: deno install
+
       - name: Run tests (Deno)
         if: matrix.runtime == 'deno'
         run: deno test --allow-all
