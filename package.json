@@ -13,8 +13,9 @@
     "test:deno": "deno test --allow-all",
     "lint": "node --check src/index.js && node --check src/cli.js",
     "changeset": "changeset",
-    "changeset:version": "changeset version",
-    "changeset:publish": "changeset publish"
+    "changeset:version": "node scripts/changeset-version.mjs",
+    "changeset:publish": "changeset publish",
+    "changeset:status": "changeset status --since=origin/main"
   },
   "keywords": [
     "github",
@@ -39,7 +40,6 @@
     "yargs": "^17.7.2"
   },
   "devDependencies": {
-    "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.7",
     "test-anywhere": "^0.7.0"
   }
