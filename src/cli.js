@@ -71,7 +71,7 @@ async function main() {
       console.log('');
       console.log('Please run the following command to login:');
       console.log('');
-      console.log('  gh auth login -h github.com -s repo,workflow,user,read:org,gist');
+      console.log('  printf "\\n" | gh auth login -s repo,workflow,user,read:org,gist --git-protocol https --web');
       console.log('');
       console.log('After logging in, run gh-setup-git-identity again.');
       process.exit(1);
