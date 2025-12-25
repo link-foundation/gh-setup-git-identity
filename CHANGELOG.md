@@ -1,5 +1,11 @@
 # gh-setup-git-identity
 
+## 0.2.1
+
+### Patch Changes
+
+- 6158223: Update gh auth login command in docs and CLI to use `--git-protocol https --web` flags for improved browser-based authentication flow
+
 ## 0.2.0
 
 ### Minor Changes
