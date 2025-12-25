@@ -12,7 +12,7 @@ A tool to setup git identity based on current GitHub user.
 Instead of manually running:
 
 ```bash
-gh auth login -h github.com -s repo,workflow,user,read:org,gist
+printf "\n" | gh auth login -s repo,workflow,user,read:org,gist --git-protocol https --web
 
 USERNAME=$(gh api user --jq '.login')
 EMAIL=$(gh api user/emails --jq '.[] | select(.primary==true) | .email')
@@ -99,7 +99,7 @@ GitHub CLI is not authenticated.
 
 Please run the following command to login:
 
-  gh auth login -h github.com -s repo,workflow,user,read:org,gist
+  printf "\n" | gh auth login -s repo,workflow,user,read:org,gist --git-protocol https --web
 
 After logging in, run gh-setup-git-identity again.
 ```
