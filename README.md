@@ -2,6 +2,7 @@
 
 A tool to setup git identity based on current GitHub user.
 
+[![npm version](https://img.shields.io/npm/v/gh-setup-git-identity)](https://www.npmjs.com/package/gh-setup-git-identity)
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
 
