@@ -1,5 +1,11 @@
 # gh-setup-git-identity
 
+## 0.2.3
+
+### Patch Changes
+
+- Test patch release
+
 ## 0.2.2
 
 ### Patch Changes
