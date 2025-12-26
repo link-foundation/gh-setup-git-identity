@@ -1,5 +1,11 @@
 # gh-setup-git-identity
 
+## 0.2.2
+
+### Patch Changes
+
+- cead870: Add NPM version badge to README.md to display current package version from npm registry
+
 ## 0.2.1
 
 ### Patch Changes
