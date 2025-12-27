@@ -100,14 +100,19 @@ async function main() {
 
     // Display results
     console.log('');
-    console.log(`${options.dryRun ? '[DRY MODE] Would configure' : 'Git configured'}:`);
-    console.log(`  user.name:  ${result.username}`);
-    console.log(`  user.email: ${result.email}`);
-    console.log(`Scope: ${scope === 'global' ? 'global (--global)' : 'local (--local)'}`);
-    console.log('');
+    console.log(`  ${options.dryRun ? '[DRY MODE] Would configure' : 'Git configured'}:`);
+    console.log(`    user.name:  ${result.username}`);
+    console.log(`    user.email: ${result.email}`);
+    console.log(`  Scope: ${scope === 'global' ? 'global (--global)' : 'local (--local)'}`);
 
     if (!options.dryRun) {
+      console.log('');
       console.log('Git identity setup complete!');
+      console.log('');
+      console.log('You can verify your configuration with:');
+      console.log('  gh auth status');
+      console.log(`  git config ${scope === 'global' ? '--global' : '--local'} user.name`);
+      console.log(`  git config ${scope === 'global' ? '--global' : '--local'} user.email`);
     }
 
     process.exit(0);

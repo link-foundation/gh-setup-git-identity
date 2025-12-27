@@ -117,20 +117,23 @@ printf "y" | gh auth login -h github.com -s repo,workflow,user,read:org,gist --g
 
 ```
 Fetching GitHub user information...
-GitHub user: your-username
-GitHub email: your-email@example.com
+  GitHub user: your-username
+  GitHub email: your-email@example.com
 
 Configuring git (global)...
-Git identity configured successfully!
+  Git identity configured successfully!
 
-Git configured:
-
-  user.name:  your-username
-  user.email: your-email@example.com
-
-Scope: global (--global)
+  Git configured:
+    user.name:  your-username
+    user.email: your-email@example.com
+  Scope: global (--global)
 
 Git identity setup complete!
+
+You can verify your configuration with:
+  gh auth status
+  git config --global user.name
+  git config --global user.email
 ```
 
 ## Library Usage

@@ -141,7 +141,7 @@ export async function runGhAuthLogin(options = {}) {
     return false;
   }
 
-  log(() => 'GitHub CLI authentication successful!');
+  log(() => '\nGitHub CLI authentication successful!');
   return true;
 }
 
@@ -323,13 +323,13 @@ export async function setupGitIdentity(options = {}) {
 
   const log = createDefaultLogger({ verbose, logger });
 
-  log(() => 'Fetching GitHub user information...');
+  log(() => '\nFetching GitHub user information...');
 
   // Get GitHub user info
   const { username, email } = await getGitHubUserInfo({ verbose, logger });
 
-  log(() => `GitHub user: ${username}`);
-  log(() => `GitHub email: ${email}`);
+  log(() => `  GitHub user: ${username}`);
+  log(() => `  GitHub email: ${email}`);
 
   if (dryRun) {
     log(() => 'DRY MODE: Would configure the following:');
@@ -339,12 +339,12 @@ export async function setupGitIdentity(options = {}) {
   }
 
   // Set git config
-  log(() => `Configuring git (${scope})...`);
+  log(() => `\nConfiguring git (${scope})...`);
 
   await setGitConfig('user.name', username, { scope, verbose, logger });
   await setGitConfig('user.email', email, { scope, verbose, logger });
 
-  log(() => 'Git identity configured successfully!');
+  log(() => '  Git identity configured successfully!');
 
   return { username, email };
 }
