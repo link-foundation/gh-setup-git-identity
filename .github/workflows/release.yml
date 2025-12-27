@@ -45,13 +45,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '20.x'
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm install
+        run: bun install
 
       - name: Check for changesets
         run: |
@@ -62,7 +62,7 @@ jobs:
           fi
 
           # Run changeset validation script
-          node scripts/validate-changeset.mjs
+          bun scripts/validate-changeset.mjs
 
   # Linting - runs after changeset check on PRs, immediately on main
   lint:
@@ -73,77 +73,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '20.x'
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm install
+        run: bun install
 
       - name: Run lint
-        run: npm run lint
+        run: bun run lint
 
-  # Test matrix: 3 runtimes (Node.js, Bun, Deno) x 3 OS (Ubuntu, macOS, Windows)
-  # Note: Bun on Windows excluded due to known timeout issues with process spawning
+  # Test with Bun on multiple OS
+  # Note: Windows excluded due to known timeout issues with process spawning
   test:
-    name: Test (${{ matrix.runtime }} on ${{ matrix.os }})
+    name: Test (Bun on ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     needs: [changeset-check]
     if: always() && (github.event_name == 'push' || needs.changeset-check.result == 'success')
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        runtime: [node, bun, deno]
-        exclude:
-          # Exclude Bun on Windows due to known timeout issues with process spawning
-          - os: windows-latest
-            runtime: bun
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        if: matrix.runtime == 'node'
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-
-      - name: Install dependencies (Node.js)
-        if: matrix.runtime == 'node'
-        run: npm install
-
-      - name: Run tests (Node.js)
-        if: matrix.runtime == 'node'
-        run: npm test
-
       - name: Setup Bun
-        if: matrix.runtime == 'bun'
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
-      - name: Install dependencies (Bun)
-        if: matrix.runtime == 'bun'
+      - name: Install dependencies
         run: bun install
 
-      - name: Run tests (Bun)
-        if: matrix.runtime == 'bun'
+      - name: Run tests
         run: bun test
-
-      - name: Setup Deno
-        if: matrix.runtime == 'deno'
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-
-      - name: Install dependencies (Deno)
-        if: matrix.runtime == 'deno'
-        run: deno install
-
-      - name: Run tests (Deno)
-        if: matrix.runtime == 'deno'
-        run: deno test --allow-all
 
   # Release - only runs on main after tests pass (for push events)
   release:
@@ -163,17 +127,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Node.js (for npm registry)
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: npm install
+        run: bun install
 
       - name: Update npm for OIDC trusted publishing
-        run: node scripts/setup-npm.mjs
+        run: bun scripts/setup-npm.mjs
 
       - name: Check for changesets
         id: check_changesets
@@ -186,25 +155,25 @@ jobs:
       - name: Version packages and commit to main
         if: steps.check_changesets.outputs.has_changesets == 'true'
         id: version
-        run: node scripts/version-and-commit.mjs --mode changeset
+        run: bun scripts/version-and-commit.mjs --mode changeset
 
       - name: Publish to npm
         # Run if version was committed OR if a previous attempt already committed (for re-runs)
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
         id: publish
-        run: node scripts/publish-to-npm.mjs --should-pull
+        run: bun scripts/publish-to-npm.mjs --should-pull
 
       - name: Create GitHub Release
         if: steps.publish.outputs.published == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/create-github-release.mjs --release-version "${{ steps.publish.outputs.published_version }}" --repository "${{ github.repository }}"
+        run: bun scripts/create-github-release.mjs --release-version "${{ steps.publish.outputs.published_version }}" --repository "${{ github.repository }}"
 
       - name: Format GitHub release notes
         if: steps.publish.outputs.published == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/format-github-release.mjs --release-version "${{ steps.publish.outputs.published_version }}" --repository "${{ github.repository }}" --commit-sha "${{ github.sha }}"
+        run: bun scripts/format-github-release.mjs --release-version "${{ steps.publish.outputs.published_version }}" --repository "${{ github.repository }}" --commit-sha "${{ github.sha }}"
 
   # Manual Instant Release - triggered via workflow_dispatch with instant mode
   # This job is in release.yml because npm trusted publishing
@@ -223,39 +192,44 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Node.js (for npm registry)
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: npm install
+        run: bun install
 
       - name: Update npm for OIDC trusted publishing
-        run: node scripts/setup-npm.mjs
+        run: bun scripts/setup-npm.mjs
 
       - name: Version packages and commit to main
         id: version
-        run: node scripts/version-and-commit.mjs --mode instant --bump-type "${{ github.event.inputs.bump_type }}" --description "${{ github.event.inputs.description }}"
+        run: bun scripts/version-and-commit.mjs --mode instant --bump-type "${{ github.event.inputs.bump_type }}" --description "${{ github.event.inputs.description }}"
 
       - name: Publish to npm
         # Run if version was committed OR if a previous attempt already committed (for re-runs)
         if: steps.version.outputs.version_committed == 'true' || steps.version.outputs.already_released == 'true'
         id: publish
-        run: node scripts/publish-to-npm.mjs
+        run: bun scripts/publish-to-npm.mjs
 
       - name: Create GitHub Release
         if: steps.publish.outputs.published == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/create-github-release.mjs --release-version "${{ steps.publish.outputs.published_version }}" --repository "${{ github.repository }}"
+        run: bun scripts/create-github-release.mjs --release-version "${{ steps.publish.outputs.published_version }}" --repository "${{ github.repository }}"
 
       - name: Format GitHub release notes
         if: steps.publish.outputs.published == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/format-github-release.mjs --release-version "${{ steps.publish.outputs.published_version }}" --repository "${{ github.repository }}" --commit-sha "${{ github.sha }}"
+        run: bun scripts/format-github-release.mjs --release-version "${{ steps.publish.outputs.published_version }}" --repository "${{ github.repository }}" --commit-sha "${{ github.sha }}"
 
   # Manual Changeset PR - creates a pull request with the changeset for review
   changeset-pr:
@@ -270,16 +244,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '20.x'
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm install
+        run: bun install
 
       - name: Create changeset file
-        run: node scripts/create-manual-changeset.mjs --bump-type "${{ github.event.inputs.bump_type }}" --description "${{ github.event.inputs.description }}"
+        run: bun scripts/create-manual-changeset.mjs --bump-type "${{ github.event.inputs.bump_type }}" --description "${{ github.event.inputs.description }}"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7

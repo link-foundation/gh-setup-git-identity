@@ -8,12 +8,12 @@
     "gh-setup-git-identity": "src/cli.js"
   },
   "scripts": {
-    "test": "node --test test/index.test.js",
+    "test": "bun test",
     "test:bun": "bun test",
     "test:deno": "deno test --allow-all",
-    "lint": "node --check src/index.js && node --check src/cli.js",
+    "lint": "bun build src/index.js --target=bun --format=esm --outfile=/dev/null && bun build src/cli.js --target=bun --format=esm --outfile=/dev/null",
     "changeset": "changeset",
-    "changeset:version": "node scripts/changeset-version.mjs",
+    "changeset:version": "bun scripts/changeset-version.mjs",
     "changeset:publish": "changeset publish",
     "changeset:status": "changeset status --since=origin/main"
   },
@@ -32,7 +32,7 @@
     "url": "https://github.com/link-foundation/gh-setup-git-identity.git"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "bun": ">=1.0.0"
   },
   "dependencies": {
     "lino-arguments": "^0.2.1",

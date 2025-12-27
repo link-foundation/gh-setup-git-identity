@@ -4,7 +4,7 @@ A tool to setup git identity based on current GitHub user.
 
 [![npm version](https://img.shields.io/npm/v/gh-setup-git-identity)](https://www.npmjs.com/package/gh-setup-git-identity)
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
+[![Bun Version](https://img.shields.io/badge/bun-%3E%3D1.0.0-brightgreen.svg)](https://bun.sh/)
 
 ## Overview
 
@@ -39,10 +39,11 @@ gh-setup-git-identity
 
 ## Prerequisites
 
-- Node.js >= 20.0.0
+- Bun >= 1.0.0
 - Git (installed and configured)
 - GitHub CLI (`gh`) installed
 
+To install Bun, see: https://bun.sh/
 To install GitHub CLI, see: https://cli.github.com/
 
 ## Installation
@@ -50,13 +51,13 @@ To install GitHub CLI, see: https://cli.github.com/
 ### Global Installation (CLI)
 
 ```bash
-npm install -g gh-setup-git-identity
+bun install -g gh-setup-git-identity
 ```
 
 ### Local Installation (Library)
 
 ```bash
-npm install gh-setup-git-identity
+bun install gh-setup-git-identity
 ```
 
 ## CLI Usage
@@ -211,17 +212,10 @@ Get current git identity configuration.
 
 ## Testing
 
-Run tests using your preferred runtime:
+Run tests using bun:
 
 ```bash
-# Node.js
-npm test
-
-# Bun
 bun test
-
-# Deno
-deno test --allow-all
 ```
 
 ## Development
