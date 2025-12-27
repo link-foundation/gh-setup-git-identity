@@ -86,28 +86,32 @@ try {
     process.exit(0);
   }
 
-  // Extract the patch changes section
-  // This regex handles two formats:
-  // 1. With commit hash: "- abc1234: Description"
-  // 2. Without commit hash: "- Description"
-  const patchChangesMatchWithHash = currentBody.match(
-    /### Patch Changes\s*\n\s*-\s+([a-f0-9]+):\s+(.+?)$/s
-  );
-  const patchChangesMatchNoHash = currentBody.match(
-    /### Patch Changes\s*\n\s*-\s+(.+?)$/s
-  );
+  // Extract the changes section (Major, Minor, or Patch)
+  // This regex handles formats:
+  // 1. With commit hash: "### Major Changes\n- abc1234: Description"
+  // 2. Without commit hash: "### Minor Changes\n- Description"
+  const changesPattern =
+    /### (Major|Minor|Patch) Changes\s*\n\s*-\s+(?:([a-f0-9]+):\s+)?(.+?)$/s;
+  const changesMatch = currentBody.match(changesPattern);
 
   let commitHash = null;
   let rawDescription = null;
+  let changeType = null;
 
-  if (patchChangesMatchWithHash) {
-    // Format: - abc1234: Description
-    [, commitHash, rawDescription] = patchChangesMatchWithHash;
-  } else if (patchChangesMatchNoHash) {
-    // Format: - Description (no commit hash)
-    [, rawDescription] = patchChangesMatchNoHash;
+  if (changesMatch) {
+    [, changeType, commitHash, rawDescription] = changesMatch;
+    console.log(`Found ${changeType} Changes section`);
+
+    // Extract commit hash if embedded in description (fallback)
+    if (!commitHash && rawDescription) {
+      const descWithHashMatch = rawDescription.match(/^([a-f0-9]+):\s+(.+)$/s);
+      if (descWithHashMatch) {
+        [, commitHash, rawDescription] = descWithHashMatch;
+      }
+    }
   } else {
-    console.log('Could not parse patch changes from release notes');
+    console.log('Could not parse changes from release notes');
+    console.log('   Looking for pattern: ### [Major|Minor|Patch] Changes');
     process.exit(0);
   }
 
