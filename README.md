@@ -74,6 +74,9 @@ gh-setup-git-identity --local
 # Preview what would be configured (dry run)
 gh-setup-git-identity --dry-run
 
+# Verify current git identity configuration
+gh-setup-git-identity --verify
+
 # Enable verbose output
 gh-setup-git-identity --verbose
 ```
@@ -87,6 +90,7 @@ Options:
   --global, -g     Set git config globally (default: true)
   --local, -l      Set git config locally (in current repository)
   --dry-run, --dry Dry run - show what would be done without making changes
+  --verify         Verify current git identity configuration
   --verbose, -v    Enable verbose output
   --help, -h       Show help
   --version        Show version number
@@ -134,6 +138,36 @@ You can verify your configuration with:
   gh auth status
   git config --global user.name
   git config --global user.email
+```
+
+### Verifying Configuration
+
+You can verify your git identity configuration at any time using:
+
+```bash
+gh-setup-git-identity --verify
+```
+
+Or by running the three verification commands directly:
+
+```bash
+gh auth status
+git config --global user.name
+git config --global user.email
+```
+
+For local repository configuration, use `--local`:
+
+```bash
+gh-setup-git-identity --verify --local
+```
+
+Or:
+
+```bash
+gh auth status
+git config --local user.name
+git config --local user.email
 ```
 
 ## Library Usage
