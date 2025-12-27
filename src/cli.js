@@ -7,13 +7,14 @@
  */
 
 import { makeConfig } from 'lino-arguments';
-import { setupGitIdentity, isGhAuthenticated, runGhAuthLogin, verifyGitIdentity } from './index.js';
+import { setupGitIdentity, isGhAuthenticated, runGhAuthLogin, verifyGitIdentity, defaultAuthOptions } from './index.js';
 
 // Parse command-line arguments with environment variable and .lenv support
 const config = makeConfig({
   yargs: ({ yargs, getenv }) =>
     yargs
       .usage('Usage: $0 [options]')
+      // Git identity options
       .option('global', {
         alias: 'g',
         type: 'boolean',
@@ -43,10 +44,59 @@ const config = makeConfig({
         description: 'Verify current git identity configuration',
         default: false
       })
+      // gh auth login options
+      .option('hostname', {
+        type: 'string',
+        description: 'GitHub hostname to authenticate with',
+        default: getenv('GH_AUTH_HOSTNAME', defaultAuthOptions.hostname)
+      })
+      .option('scopes', {
+        alias: 's',
+        type: 'string',
+        description: 'Additional authentication scopes to request (comma-separated)',
+        default: getenv('GH_AUTH_SCOPES', defaultAuthOptions.scopes)
+      })
+      .option('git-protocol', {
+        alias: 'p',
+        type: 'string',
+        description: 'Protocol for git operations: ssh or https',
+        choices: ['ssh', 'https'],
+        default: getenv('GH_AUTH_GIT_PROTOCOL', defaultAuthOptions.gitProtocol)
+      })
+      .option('web', {
+        alias: 'w',
+        type: 'boolean',
+        description: 'Open a browser to authenticate',
+        default: getenv('GH_AUTH_WEB', defaultAuthOptions.web)
+      })
+      .option('with-token', {
+        type: 'boolean',
+        description: 'Read token from standard input',
+        default: false
+      })
+      .option('skip-ssh-key', {
+        type: 'boolean',
+        description: 'Skip generate/upload SSH key prompt',
+        default: getenv('GH_AUTH_SKIP_SSH_KEY', defaultAuthOptions.skipSshKey)
+      })
+      .option('insecure-storage', {
+        type: 'boolean',
+        description: 'Save authentication credentials in plain text instead of credential store',
+        default: getenv('GH_AUTH_INSECURE_STORAGE', defaultAuthOptions.insecureStorage)
+      })
+      .option('clipboard', {
+        type: 'boolean',
+        description: 'Copy one-time OAuth device code to clipboard',
+        default: getenv('GH_AUTH_CLIPBOARD', defaultAuthOptions.clipboard)
+      })
       .check((argv) => {
         // --global and --local are mutually exclusive
         if (argv.global && argv.local) {
           throw new Error('Arguments global and local are mutually exclusive');
+        }
+        // --web and --with-token are mutually exclusive
+        if (argv.web && argv.withToken) {
+          throw new Error('Arguments web and with-token are mutually exclusive');
         }
         return true;
       })
@@ -54,6 +104,10 @@ const config = makeConfig({
       .example('$0 --local', 'Setup git identity for current repository only')
       .example('$0 --dry-run', 'Show what would be configured without making changes')
       .example('$0 --verify', 'Verify current git identity configuration')
+      .example('$0 --hostname enterprise.github.com', 'Authenticate with GitHub Enterprise')
+      .example('$0 --scopes repo,user,gist', 'Authenticate with custom scopes')
+      .example('$0 --git-protocol ssh', 'Use SSH protocol for git operations')
+      .example('$0 --with-token < token.txt', 'Authenticate using a token file')
       .help('h')
       .alias('h', 'help')
       .version('0.1.0')
@@ -135,13 +189,26 @@ async function main() {
     if (!authenticated) {
       console.log('GitHub CLI is not authenticated. Starting authentication...');
 
-      // Automatically run gh auth login
-      const loginSuccess = await runGhAuthLogin({ verbose: config.verbose });
+      // Prepare auth options from CLI arguments
+      const authOptions = {
+        hostname: config.hostname,
+        scopes: config.scopes,
+        gitProtocol: config.gitProtocol,
+        web: config.web,
+        withToken: config.withToken,
+        skipSshKey: config.skipSshKey,
+        insecureStorage: config.insecureStorage,
+        clipboard: config.clipboard,
+        verbose: config.verbose
+      };
+
+      // Automatically run gh auth login with configured options
+      const loginSuccess = await runGhAuthLogin(authOptions);
 
       if (!loginSuccess) {
         console.log('');
         console.log('Authentication failed. Please try running manually:');
-        console.log('  printf "y" | gh auth login -h github.com -s repo,workflow,user,read:org,gist --git-protocol https --web');
+        console.log(`  printf "y" | gh auth login -h ${config.hostname} -s ${config.scopes} --git-protocol ${config.gitProtocol} --web`);
         process.exit(1);
       }
     }

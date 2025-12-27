@@ -10,7 +10,8 @@ import {
   getGitHubEmail,
   getGitHubUserInfo,
   getGitConfig,
-  verifyGitIdentity
+  verifyGitIdentity,
+  defaultAuthOptions
 } from '../src/index.js';
 
 // Note: These tests require gh to be authenticated
@@ -89,10 +90,42 @@ test('runGhAuthLogin - is exported as a function', async () => {
   assert.equal(typeof runGhAuthLogin, 'function');
 });
 
+// Test: defaultAuthOptions is exported and has correct structure
+test('defaultAuthOptions - is exported with correct default values', async () => {
+  assert.ok(typeof defaultAuthOptions === 'object');
+  assert.equal(defaultAuthOptions.hostname, 'github.com');
+  assert.equal(defaultAuthOptions.scopes, 'repo,workflow,user,read:org,gist');
+  assert.equal(defaultAuthOptions.gitProtocol, 'https');
+  assert.equal(defaultAuthOptions.web, true);
+  assert.equal(defaultAuthOptions.withToken, false);
+  assert.equal(defaultAuthOptions.skipSshKey, false);
+  assert.equal(defaultAuthOptions.insecureStorage, false);
+  assert.equal(defaultAuthOptions.clipboard, false);
+});
+
+// Test: defaultAuthOptions contains all expected keys
+test('defaultAuthOptions - contains all expected keys', async () => {
+  const expectedKeys = [
+    'hostname',
+    'scopes',
+    'gitProtocol',
+    'web',
+    'withToken',
+    'skipSshKey',
+    'insecureStorage',
+    'clipboard'
+  ];
+
+  for (const key of expectedKeys) {
+    assert.ok(key in defaultAuthOptions, `Missing key: ${key}`);
+  }
+});
+
 // Test: module exports
 test('module exports all expected functions', async () => {
   const module = await import('../src/index.js');
 
+  assert.ok(typeof module.defaultAuthOptions === 'object');
   assert.ok(typeof module.isGhAuthenticated === 'function');
   assert.ok(typeof module.runGhAuthLogin === 'function');
   assert.ok(typeof module.getGitHubUsername === 'function');
@@ -110,6 +143,7 @@ test('default export contains all functions', async () => {
   const defaultExport = module.default;
 
   assert.ok(typeof defaultExport === 'object');
+  assert.ok(typeof defaultExport.defaultAuthOptions === 'object');
   assert.ok(typeof defaultExport.isGhAuthenticated === 'function');
   assert.ok(typeof defaultExport.runGhAuthLogin === 'function');
   assert.ok(typeof defaultExport.getGitHubUsername === 'function');
