@@ -66,9 +66,7 @@ async function main() {
     const authenticated = await isGhAuthenticated({ verbose: config.verbose });
 
     if (!authenticated) {
-      console.log('');
       console.log('GitHub CLI is not authenticated. Starting authentication...');
-      console.log('');
 
       // Automatically run gh auth login
       const loginSuccess = await runGhAuthLogin({ verbose: config.verbose });
@@ -76,13 +74,9 @@ async function main() {
       if (!loginSuccess) {
         console.log('');
         console.log('Authentication failed. Please try running manually:');
-        console.log('');
         console.log('  printf "y" | gh auth login -h github.com -s repo,workflow,user,read:org,gist --git-protocol https --web');
-        console.log('');
         process.exit(1);
       }
-
-      console.log('');
     }
 
     // Prepare options
@@ -94,12 +88,11 @@ async function main() {
 
     if (options.verbose) {
       console.log('Options:', options);
-      console.log('');
     }
 
     if (options.dryRun) {
-      console.log('DRY MODE - No actual changes will be made');
       console.log('');
+      console.log('DRY MODE - No actual changes will be made');
     }
 
     // Setup git identity
@@ -108,10 +101,8 @@ async function main() {
     // Display results
     console.log('');
     console.log(`${options.dryRun ? '[DRY MODE] Would configure' : 'Git configured'}:`);
-    console.log('');
     console.log(`  user.name:  ${result.username}`);
     console.log(`  user.email: ${result.email}`);
-    console.log('');
     console.log(`Scope: ${scope === 'global' ? 'global (--global)' : 'local (--local)'}`);
     console.log('');
 
@@ -125,7 +116,6 @@ async function main() {
     console.error('Error:', error.message);
 
     if (config.verbose) {
-      console.error('');
       console.error('Stack trace:');
       console.error(error.stack);
     }
