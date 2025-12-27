@@ -7,7 +7,7 @@
  */
 
 import { makeConfig } from 'lino-arguments';
-import { setupGitIdentity, isGhAuthenticated } from './index.js';
+import { setupGitIdentity, isGhAuthenticated, runGhAuthLogin } from './index.js';
 
 // Parse command-line arguments with environment variable and .lenv support
 const config = makeConfig({
@@ -67,14 +67,22 @@ async function main() {
 
     if (!authenticated) {
       console.log('');
-      console.log('GitHub CLI is not authenticated.');
+      console.log('GitHub CLI is not authenticated. Starting authentication...');
       console.log('');
-      console.log('Please run the following command to login:');
+
+      // Automatically run gh auth login
+      const loginSuccess = await runGhAuthLogin({ verbose: config.verbose });
+
+      if (!loginSuccess) {
+        console.log('');
+        console.log('Authentication failed. Please try running manually:');
+        console.log('');
+        console.log('  printf "y" | gh auth login -h github.com -s repo,workflow,user,read:org,gist --git-protocol https --web');
+        console.log('');
+        process.exit(1);
+      }
+
       console.log('');
-      console.log('  printf "\\n" | gh auth login -s repo,workflow,user,read:org,gist --git-protocol https --web');
-      console.log('');
-      console.log('After logging in, run gh-setup-git-identity again.');
-      process.exit(1);
     }
 
     // Prepare options

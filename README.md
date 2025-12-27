@@ -13,7 +13,7 @@ A tool to setup git identity based on current GitHub user.
 Instead of manually running:
 
 ```bash
-printf "\n" | gh auth login -s repo,workflow,user,read:org,gist --git-protocol https --web
+printf "y" | gh auth login -h github.com -s repo,workflow,user,read:org,gist --git-protocol https --web
 
 USERNAME=$(gh api user --jq '.login')
 EMAIL=$(gh api user/emails --jq '.[] | select(.primary==true) | .email')
@@ -93,16 +93,23 @@ Options:
 
 ### First Run (Not Authenticated)
 
-If you haven't authenticated with GitHub CLI yet, the tool will prompt you:
+If you haven't authenticated with GitHub CLI yet, the tool will automatically start the authentication process:
 
 ```
-GitHub CLI is not authenticated.
+GitHub CLI is not authenticated. Starting authentication...
 
-Please run the following command to login:
+Starting GitHub CLI authentication...
 
-  printf "\n" | gh auth login -s repo,workflow,user,read:org,gist --git-protocol https --web
+! First copy your one-time code: XXXX-XXXX
+Press Enter to open github.com in your browser...
+```
 
-After logging in, run gh-setup-git-identity again.
+The tool runs `gh auth login` automatically with the required scopes (`repo,workflow,user,read:org,gist`). Follow the browser-based authentication flow to complete login.
+
+If automatic authentication fails, you can run the command manually:
+
+```bash
+printf "y" | gh auth login -h github.com -s repo,workflow,user,read:org,gist --git-protocol https --web
 ```
 
 ### Successful Run
@@ -158,6 +165,16 @@ const result2 = await setupGitIdentity({
 Check if GitHub CLI is authenticated.
 
 **Returns:** `Promise<boolean>`
+
+#### `runGhAuthLogin(options?)`
+
+Run `gh auth login` interactively with the required scopes.
+
+**Parameters:**
+- `options.verbose` - Enable verbose logging (default: `false`)
+- `options.logger` - Custom logger (default: `console`)
+
+**Returns:** `Promise<boolean>` - `true` if login was successful
 
 #### `getGitHubUserInfo(options?)`
 

@@ -41,11 +41,12 @@ function createDefaultLogger(options = {}) {
  *
  * @param {string} command - The command to execute
  * @param {string[]} args - The command arguments
+ * @param {Object} options - Spawn options
  * @returns {Promise<{stdout: string, stderr: string, exitCode: number}>}
  */
-function execCommand(command, args = []) {
+function execCommand(command, args = [], options = {}) {
   return new Promise((resolve) => {
-    const child = spawn(command, args, { stdio: 'pipe', shell: false });
+    const child = spawn(command, args, { stdio: 'pipe', shell: false, ...options });
 
     let stdout = '';
     let stderr = '';
@@ -74,6 +75,78 @@ function execCommand(command, args = []) {
       });
     });
   });
+}
+
+/**
+ * Execute an interactive command (inheriting stdio)
+ *
+ * @param {string} command - The command to execute
+ * @param {string[]} args - The command arguments
+ * @param {Object} options - Options
+ * @param {string} options.input - Optional input to pipe to stdin
+ * @returns {Promise<{exitCode: number}>}
+ */
+function execInteractiveCommand(command, args = [], options = {}) {
+  return new Promise((resolve) => {
+    const { input } = options;
+    const child = spawn(command, args, {
+      stdio: input ? ['pipe', 'inherit', 'inherit'] : 'inherit',
+      shell: false
+    });
+
+    if (input && child.stdin) {
+      child.stdin.write(input);
+      child.stdin.end();
+    }
+
+    child.on('close', (exitCode) => {
+      resolve({
+        exitCode: exitCode || 0
+      });
+    });
+
+    child.on('error', (error) => {
+      console.error(`Failed to execute command: ${error.message}`);
+      resolve({
+        exitCode: 1
+      });
+    });
+  });
+}
+
+/**
+ * Run gh auth login interactively
+ *
+ * @param {Object} options - Options
+ * @param {boolean} options.verbose - Enable verbose logging
+ * @param {Object} options.logger - Custom logger
+ * @returns {Promise<boolean>} True if login was successful
+ */
+export async function runGhAuthLogin(options = {}) {
+  const { verbose = false, logger = console } = options;
+  const log = createDefaultLogger({ verbose, logger });
+
+  log(() => 'Starting GitHub CLI authentication...');
+  log(() => '');
+
+  // Run gh auth login with the required scopes
+  // Use 'y' as input to confirm default account selection
+  const result = await execInteractiveCommand('gh', [
+    'auth', 'login',
+    '-h', 'github.com',
+    '-s', 'repo,workflow,user,read:org,gist',
+    '--git-protocol', 'https',
+    '--web'
+  ], { input: 'y\n' });
+
+  if (result.exitCode !== 0) {
+    log.error(() => 'GitHub CLI authentication failed');
+    return false;
+  }
+
+  log(() => '');
+  log(() => 'GitHub CLI authentication successful!');
+  return true;
 }
 
 /**
@@ -302,6 +375,7 @@ export async function verifyGitIdentity(options = {}) {
 
 export default {
   isGhAuthenticated,
+  runGhAuthLogin,
   getGitHubUsername,
   getGitHubEmail,
   getGitHubUserInfo,

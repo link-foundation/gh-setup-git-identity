@@ -5,6 +5,7 @@
 import { test, assert } from 'test-anywhere';
 import {
   isGhAuthenticated,
+  runGhAuthLogin,
   getGitHubUsername,
   getGitHubEmail,
   getGitHubUserInfo,
@@ -83,11 +84,17 @@ test('getGitHubUserInfo - returns user info when authenticated', async () => {
   assert.ok(info.email.includes('@'));
 });
 
+// Test: runGhAuthLogin function exists and is a function
+test('runGhAuthLogin - is exported as a function', async () => {
+  assert.equal(typeof runGhAuthLogin, 'function');
+});
+
 // Test: module exports
 test('module exports all expected functions', async () => {
   const module = await import('../src/index.js');
 
   assert.ok(typeof module.isGhAuthenticated === 'function');
+  assert.ok(typeof module.runGhAuthLogin === 'function');
   assert.ok(typeof module.getGitHubUsername === 'function');
   assert.ok(typeof module.getGitHubEmail === 'function');
   assert.ok(typeof module.getGitHubUserInfo === 'function');
@@ -104,6 +111,7 @@ test('default export contains all functions', async () => {
 
   assert.ok(typeof defaultExport === 'object');
   assert.ok(typeof defaultExport.isGhAuthenticated === 'function');
+  assert.ok(typeof defaultExport.runGhAuthLogin === 'function');
   assert.ok(typeof defaultExport.getGitHubUsername === 'function');
   assert.ok(typeof defaultExport.getGitHubEmail === 'function');
   assert.ok(typeof defaultExport.getGitHubUserInfo === 'function');
