@@ -1,5 +1,11 @@
 # gh-setup-git-identity
 
+## 0.3.0
+
+### Minor Changes
+
+- 8c146cc: Automatically run `gh auth login` when GitHub CLI is not authenticated, enabling single-command setup instead of requiring manual login first
+
 ## 0.2.3
 
 ### Patch Changes
