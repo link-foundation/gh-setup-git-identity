@@ -126,9 +126,6 @@ export async function runGhAuthLogin(options = {}) {
   const { verbose = false, logger = console } = options;
   const log = createDefaultLogger({ verbose, logger });
 
-  log(() => 'Starting GitHub CLI authentication...');
-  log(() => '');
-
   // Run gh auth login with the required scopes
   // Use 'y' as input to confirm default account selection
   const result = await execInteractiveCommand('gh', [
@@ -144,7 +141,6 @@ export async function runGhAuthLogin(options = {}) {
     return false;
   }
 
-  log(() => '');
   log(() => 'GitHub CLI authentication successful!');
   return true;
 }
@@ -336,7 +332,6 @@ export async function setupGitIdentity(options = {}) {
   log(() => `GitHub email: ${email}`);
 
   if (dryRun) {
-    log(() => '');
     log(() => 'DRY MODE: Would configure the following:');
     log(() => `  git config --${scope} user.name "${username}"`);
     log(() => `  git config --${scope} user.email "${email}"`);
@@ -344,7 +339,6 @@ export async function setupGitIdentity(options = {}) {
   }
 
   // Set git config
-  log(() => '');
   log(() => `Configuring git (${scope})...`);
 
   await setGitConfig('user.name', username, { scope, verbose, logger });
