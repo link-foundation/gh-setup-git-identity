@@ -115,26 +115,96 @@ function execInteractiveCommand(command, args = [], options = {}) {
 }
 
 /**
+ * Default options for gh auth login
+ */
+export const defaultAuthOptions = {
+  hostname: 'github.com',
+  scopes: 'repo,workflow,user,read:org,gist',
+  gitProtocol: 'https',
+  web: true,
+  withToken: false,
+  skipSshKey: false,
+  insecureStorage: false,
+  clipboard: false
+};
+
+/**
  * Run gh auth login interactively
  *
  * @param {Object} options - Options
+ * @param {string} options.hostname - GitHub hostname (default: 'github.com')
+ * @param {string} options.scopes - OAuth scopes, comma-separated (default: 'repo,workflow,user,read:org,gist')
+ * @param {string} options.gitProtocol - Git protocol: 'ssh' or 'https' (default: 'https')
+ * @param {boolean} options.web - Open browser to authenticate (default: true)
+ * @param {boolean} options.withToken - Read token from stdin (default: false)
+ * @param {boolean} options.skipSshKey - Skip SSH key generation/upload prompt (default: false)
+ * @param {boolean} options.insecureStorage - Store credentials in plain text (default: false)
+ * @param {boolean} options.clipboard - Copy OAuth code to clipboard (default: false)
  * @param {boolean} options.verbose - Enable verbose logging
  * @param {Object} options.logger - Custom logger
  * @returns {Promise<boolean>} True if login was successful
  */
 export async function runGhAuthLogin(options = {}) {
-  const { verbose = false, logger = console } = options;
+  const {
+    hostname = defaultAuthOptions.hostname,
+    scopes = defaultAuthOptions.scopes,
+    gitProtocol = defaultAuthOptions.gitProtocol,
+    web = defaultAuthOptions.web,
+    withToken = defaultAuthOptions.withToken,
+    skipSshKey = defaultAuthOptions.skipSshKey,
+    insecureStorage = defaultAuthOptions.insecureStorage,
+    clipboard = defaultAuthOptions.clipboard,
+    verbose = false,
+    logger = console
+  } = options;
+
   const log = createDefaultLogger({ verbose, logger });
 
-  // Run gh auth login with the required scopes
-  // Use 'y' as input to confirm default account selection
-  const result = await execInteractiveCommand('gh', [
-    'auth', 'login',
-    '-h', 'github.com',
-    '-s', 'repo,workflow,user,read:org,gist',
-    '--git-protocol', 'https',
-    '--web'
-  ], { input: 'y\n' });
+  // Build the arguments for gh auth login
+  const args = ['auth', 'login'];
+
+  // Add hostname
+  if (hostname) {
+    args.push('-h', hostname);
+  }
+
+  // Add scopes
+  if (scopes) {
+    args.push('-s', scopes);
+  }
+
+  // Add git protocol
+  if (gitProtocol) {
+    args.push('--git-protocol', gitProtocol);
+  }
+
+  // Add boolean flags
+  if (web && !withToken) {
+    args.push('--web');
+  }
+
+  if (withToken) {
+    args.push('--with-token');
+  }
+
+  if (skipSshKey) {
+    args.push('--skip-ssh-key');
+  }
+
+  if (insecureStorage) {
+    args.push('--insecure-storage');
+  }
+
+  if (clipboard && web && !withToken) {
+    args.push('--clipboard');
+  }
+
+  log.debug(() => `Running: gh ${args.join(' ')}`);
+
+  // Run gh auth login
+  // Use 'y' as input to confirm default account selection (only needed for interactive mode)
+  const inputValue = withToken ? undefined : 'y\n';
+  const result = await execInteractiveCommand('gh', args, { input: inputValue });
 
   if (result.exitCode !== 0) {
     log.error(() => 'GitHub CLI authentication failed');
@@ -368,6 +438,7 @@ export async function verifyGitIdentity(options = {}) {
 }
 
 export default {
+  defaultAuthOptions,
   isGhAuthenticated,
   runGhAuthLogin,
   getGitHubUsername,

@@ -86,14 +86,51 @@ gh-setup-git-identity --verbose
 ```
 Usage: gh-setup-git-identity [options]
 
-Options:
-  --global, -g     Set git config globally (default: true)
-  --local, -l      Set git config locally (in current repository)
-  --dry-run, --dry Dry run - show what would be done without making changes
-  --verify         Verify current git identity configuration
-  --verbose, -v    Enable verbose output
-  --help, -h       Show help
-  --version        Show version number
+Git Identity Options:
+  --global, -g         Set git config globally (default: true)
+  --local, -l          Set git config locally (in current repository)
+  --dry-run, --dry     Dry run - show what would be done without making changes
+  --verify             Verify current git identity configuration
+  --verbose, -v        Enable verbose output
+
+GitHub Authentication Options:
+  --hostname           GitHub hostname to authenticate with (default: github.com)
+  --scopes, -s         Authentication scopes, comma-separated (default: repo,workflow,user,read:org,gist)
+  --git-protocol, -p   Protocol for git operations: ssh or https (default: https)
+  --web, -w            Open a browser to authenticate (default: true)
+  --with-token         Read token from standard input
+  --skip-ssh-key       Skip generate/upload SSH key prompt
+  --insecure-storage   Save credentials in plain text instead of credential store
+  --clipboard          Copy one-time OAuth device code to clipboard
+
+General Options:
+  --help, -h           Show help
+  --version            Show version number
+```
+
+### Advanced Authentication Examples
+
+```bash
+# Authenticate with GitHub Enterprise
+gh-setup-git-identity --hostname enterprise.github.com
+
+# Use SSH protocol instead of HTTPS
+gh-setup-git-identity --git-protocol ssh
+
+# Authenticate with custom scopes
+gh-setup-git-identity --scopes repo,user,gist
+
+# Use token-based authentication (reads from stdin)
+echo "ghp_xxxxx" | gh-setup-git-identity --with-token
+
+# Copy OAuth code to clipboard automatically
+gh-setup-git-identity --clipboard
+
+# Skip SSH key generation prompt
+gh-setup-git-identity --git-protocol ssh --skip-ssh-key
+
+# Store credentials in plain text (not recommended for production)
+gh-setup-git-identity --insecure-storage
 ```
 
 ### First Run (Not Authenticated)
@@ -206,13 +243,38 @@ Check if GitHub CLI is authenticated.
 
 #### `runGhAuthLogin(options?)`
 
-Run `gh auth login` interactively with the required scopes.
+Run `gh auth login` with configurable options.
 
 **Parameters:**
+- `options.hostname` - GitHub hostname (default: `'github.com'`)
+- `options.scopes` - OAuth scopes, comma-separated (default: `'repo,workflow,user,read:org,gist'`)
+- `options.gitProtocol` - Git protocol: `'ssh'` or `'https'` (default: `'https'`)
+- `options.web` - Open browser to authenticate (default: `true`)
+- `options.withToken` - Read token from stdin (default: `false`)
+- `options.skipSshKey` - Skip SSH key prompt (default: `false`)
+- `options.insecureStorage` - Store credentials in plain text (default: `false`)
+- `options.clipboard` - Copy OAuth code to clipboard (default: `false`)
 - `options.verbose` - Enable verbose logging (default: `false`)
 - `options.logger` - Custom logger (default: `console`)
 
 **Returns:** `Promise<boolean>` - `true` if login was successful
+
+#### `defaultAuthOptions`
+
+Default authentication options object that can be imported and used as a reference:
+
+```javascript
+{
+  hostname: 'github.com',
+  scopes: 'repo,workflow,user,read:org,gist',
+  gitProtocol: 'https',
+  web: true,
+  withToken: false,
+  skipSshKey: false,
+  insecureStorage: false,
+  clipboard: false
+}
+```
 
 #### `getGitHubUserInfo(options?)`
 
@@ -242,10 +304,22 @@ Get current git identity configuration.
 
 ### Environment Variables
 
+#### Git Identity Options
+
 - `GH_SETUP_GIT_IDENTITY_GLOBAL` - Set global config (default: `true`)
 - `GH_SETUP_GIT_IDENTITY_LOCAL` - Set local config (default: `false`)
 - `GH_SETUP_GIT_IDENTITY_DRY_RUN` - Enable dry run mode (default: `false`)
 - `GH_SETUP_GIT_IDENTITY_VERBOSE` - Enable verbose output (default: `false`)
+
+#### GitHub Authentication Options
+
+- `GH_AUTH_HOSTNAME` - GitHub hostname (default: `github.com`)
+- `GH_AUTH_SCOPES` - Authentication scopes (default: `repo,workflow,user,read:org,gist`)
+- `GH_AUTH_GIT_PROTOCOL` - Git protocol: `ssh` or `https` (default: `https`)
+- `GH_AUTH_WEB` - Open browser for authentication (default: `true`)
+- `GH_AUTH_SKIP_SSH_KEY` - Skip SSH key prompt (default: `false`)
+- `GH_AUTH_INSECURE_STORAGE` - Store credentials in plain text (default: `false`)
+- `GH_AUTH_CLIPBOARD` - Copy OAuth code to clipboard (default: `false`)
 
 ## Testing
 
