@@ -1,6 +1,6 @@
 {
   "name": "gh-setup-git-identity",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "A tool to setup git identity based on current gh user",
   "type": "module",
   "main": "src/index.js",
