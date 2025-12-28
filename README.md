@@ -317,6 +317,50 @@ Get current git identity configuration.
 
 **Returns:** `Promise<{username: string|null, email: string|null}>`
 
+## Multi-Environment Usage
+
+### Important: GitHub OAuth Token Limits
+
+GitHub limits OAuth tokens to **10 per user/application/scope combination**. If you use `gh-setup-git-identity` on more than 10 machines or environments, the oldest tokens will be automatically revoked by GitHub, causing authentication failures on those machines.
+
+For more details, see the [GitHub documentation on token expiration and revocation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/token-expiration-and-revocation).
+
+### Recommended: Use Personal Access Tokens (PATs)
+
+For multi-environment setups (Docker containers, CI/CD, multiple servers), we recommend using Personal Access Tokens instead of the OAuth device flow:
+
+1. Create a PAT at https://github.com/settings/tokens with these scopes:
+   - `repo`, `workflow`, `user`, `read:org`, `gist`
+
+2. Authenticate using the token:
+
+```bash
+# Option 1: Via stdin
+echo "ghp_your_token_here" | gh-setup-git-identity --with-token
+
+# Option 2: Via environment variable (recommended for automation)
+export GH_TOKEN="ghp_your_token_here"
+gh-setup-git-identity
+```
+
+### Why PATs Are Better for Multi-Environment
+
+- **No token limit**: PATs don't count toward the 10-token OAuth limit
+- **Consistent authentication**: Same token works across all environments
+- **Explicit control**: You manage the token lifecycle
+- **CI/CD friendly**: Easy to inject as a secret
+
+### Revoking Old OAuth Tokens
+
+If you've accumulated OAuth tokens and need to clean up:
+
+1. Go to **GitHub Settings** > **Applications** > **Authorized OAuth Apps**
+2. Find "GitHub CLI" in the list
+3. Click **Revoke** to remove all OAuth tokens
+4. Re-authenticate with `gh-setup-git-identity`
+
+For a detailed case study of this issue, see [docs/case-studies/issue-26/](./docs/case-studies/issue-26/).
+
 ## Configuration
 
 ### Environment Variables
