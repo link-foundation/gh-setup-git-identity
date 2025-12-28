@@ -14,6 +14,7 @@ Instead of manually running:
 
 ```bash
 printf "y" | gh auth login -h github.com -s repo,workflow,user,read:org,gist --git-protocol https --web
+gh auth setup-git -h github.com
 
 USERNAME=$(gh api user --jq '.login')
 EMAIL=$(gh api user/emails --jq '.[] | select(.primary==true) | .email')
@@ -33,6 +34,7 @@ gh-setup-git-identity
 - **Automatic identity setup**: Fetches username and email from GitHub
 - **Global and local configuration**: Configure git globally or per-repository
 - **Authentication check**: Prompts you to login if not authenticated
+- **Git credential helper setup**: Automatically runs `gh auth setup-git` to configure git to use GitHub CLI for HTTPS authentication
 - **Dry-run mode**: Preview changes without making them
 - **Cross-platform**: Works on macOS, Linux, and Windows
 - **Verbose mode**: Built-in verbose mode for debugging
@@ -146,12 +148,13 @@ Starting GitHub CLI authentication...
 Press Enter to open github.com in your browser...
 ```
 
-The tool runs `gh auth login` automatically with the required scopes (`repo,workflow,user,read:org,gist`). Follow the browser-based authentication flow to complete login.
+The tool runs `gh auth login` automatically with the required scopes (`repo,workflow,user,read:org,gist`), followed by `gh auth setup-git` to configure git to use GitHub CLI as the credential helper. Follow the browser-based authentication flow to complete login.
 
-If automatic authentication fails, you can run the command manually:
+If automatic authentication fails, you can run the commands manually:
 
 ```bash
 printf "y" | gh auth login -h github.com -s repo,workflow,user,read:org,gist --git-protocol https --web
+gh auth setup-git -h github.com
 ```
 
 ### Successful Run
@@ -258,6 +261,20 @@ Run `gh auth login` with configurable options.
 - `options.logger` - Custom logger (default: `console`)
 
 **Returns:** `Promise<boolean>` - `true` if login was successful
+
+#### `runGhAuthSetupGit(options?)`
+
+Run `gh auth setup-git` to configure git to use GitHub CLI as the credential helper.
+
+This is automatically called after `gh auth login` and also when running `gh-setup-git-identity` to ensure git is properly configured for HTTPS operations. Without this, git push/pull may fail with "could not read Username" error.
+
+**Parameters:**
+- `options.hostname` - GitHub hostname (default: `'github.com'`)
+- `options.force` - Force setup even if the host is not known (default: `false`)
+- `options.verbose` - Enable verbose logging (default: `false`)
+- `options.logger` - Custom logger (default: `console`)
+
+**Returns:** `Promise<boolean>` - `true` if setup was successful
 
 #### `defaultAuthOptions`
 
