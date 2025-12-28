@@ -7,7 +7,7 @@
  */
 
 import { makeConfig } from 'lino-arguments';
-import { setupGitIdentity, isGhAuthenticated, runGhAuthLogin, verifyGitIdentity, defaultAuthOptions } from './index.js';
+import { setupGitIdentity, isGhAuthenticated, runGhAuthLogin, runGhAuthSetupGit, verifyGitIdentity, defaultAuthOptions } from './index.js';
 
 // Parse command-line arguments with environment variable and .lenv support
 const config = makeConfig({
@@ -210,6 +210,32 @@ async function main() {
         console.log('Authentication failed. Please try running manually:');
         console.log(`  printf "y" | gh auth login -h ${config.hostname} -s ${config.scopes} --git-protocol ${config.gitProtocol} --web`);
         process.exit(1);
+      }
+
+      // After successful login, setup git credential helper
+      // This is required for HTTPS git operations to work properly
+      const setupGitSuccess = await runGhAuthSetupGit({
+        hostname: config.hostname,
+        verbose: config.verbose
+      });
+
+      if (!setupGitSuccess) {
+        console.log('');
+        console.log('Warning: Failed to setup git credential helper. You may need to run manually:');
+        console.log(`  gh auth setup-git -h ${config.hostname}`);
+        // Continue anyway, as identity setup might still work
+      }
+    } else {
+      // Even if already authenticated, ensure git credential helper is configured
+      // This helps fix cases where gh auth login was run but gh auth setup-git wasn't
+      const setupGitSuccess = await runGhAuthSetupGit({
+        hostname: config.hostname,
+        verbose: config.verbose
+      });
+
+      if (!setupGitSuccess && config.verbose) {
+        console.log('Note: Git credential helper may not be configured. Consider running:');
+        console.log(`  gh auth setup-git -h ${config.hostname}`);
       }
     }
 

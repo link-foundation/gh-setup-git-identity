@@ -216,6 +216,55 @@ export async function runGhAuthLogin(options = {}) {
 }
 
 /**
+ * Run gh auth setup-git to configure git to use GitHub CLI as credential helper
+ *
+ * This command configures git to use GitHub CLI as a credential helper for HTTPS operations.
+ * Without this, git push/pull may fail with "could not read Username" error when using HTTPS protocol.
+ *
+ * @param {Object} options - Options
+ * @param {string} options.hostname - GitHub hostname (default: 'github.com')
+ * @param {boolean} options.force - Force setup even if the host is not known (default: false)
+ * @param {boolean} options.verbose - Enable verbose logging
+ * @param {Object} options.logger - Custom logger
+ * @returns {Promise<boolean>} True if setup was successful
+ */
+export async function runGhAuthSetupGit(options = {}) {
+  const {
+    hostname = defaultAuthOptions.hostname,
+    force = false,
+    verbose = false,
+    logger = console
+  } = options;
+
+  const log = createDefaultLogger({ verbose, logger });
+
+  // Build the arguments for gh auth setup-git
+  const args = ['auth', 'setup-git'];
+
+  // Add hostname
+  if (hostname) {
+    args.push('-h', hostname);
+  }
+
+  // Add force flag if specified
+  if (force) {
+    args.push('--force');
+  }
+
+  log.debug(() => `Running: gh ${args.join(' ')}`);
+
+  const result = await execCommand('gh', args);
+
+  if (result.exitCode !== 0) {
+    log.error(() => `Failed to setup git credential helper: ${result.stderr}`);
+    return false;
+  }
+
+  log(() => 'Git credential helper configured for GitHub CLI');
+  return true;
+}
+
+/**
  * Check if GitHub CLI is authenticated
  *
  * @param {Object} options - Options
@@ -441,6 +490,7 @@ export default {
   defaultAuthOptions,
   isGhAuthenticated,
   runGhAuthLogin,
+  runGhAuthSetupGit,
   getGitHubUsername,
   getGitHubEmail,
   getGitHubUserInfo,
