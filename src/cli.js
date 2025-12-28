@@ -188,6 +188,15 @@ async function main() {
 
     if (!authenticated) {
       console.log('GitHub CLI is not authenticated. Starting authentication...');
+      console.log('');
+
+      // Show token limit warning for OAuth device flow (not when using --with-token)
+      if (!config.withToken) {
+        console.log('Note: GitHub limits OAuth tokens to 10 per user/application.');
+        console.log('      For multi-environment setups, consider using Personal Access Tokens.');
+        console.log('      See: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/token-expiration-and-revocation');
+        console.log('');
+      }
 
       // Prepare auth options from CLI arguments
       const authOptions = {
