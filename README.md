@@ -93,6 +93,8 @@ Git Identity Options:
   --local, -l          Set git config locally (in current repository)
   --dry-run, --dry     Dry run - show what would be done without making changes
   --verify             Verify current git identity configuration
+  --repair             Repair git identity without triggering login (requires existing auth)
+  --no-auto-login      Disable automatic login if not authenticated
   --verbose, -v        Enable verbose output
 
 GitHub Authentication Options:
@@ -209,6 +211,33 @@ gh auth status
 git config --local user.name
 git config --local user.email
 ```
+
+### Repairing Configuration
+
+If your git identity configuration becomes corrupted or misconfigured (e.g., empty `user.name` or `user.email`), you can use the `--repair` option to fix it without triggering a new login:
+
+```bash
+# Repair git identity using existing authentication
+gh-setup-git-identity --repair
+```
+
+This is useful when:
+- Git operations fail with "empty ident name not allowed" error
+- The `user.name` or `user.email` was accidentally cleared or corrupted
+- You want to reconfigure git identity without going through the login flow again
+
+The `--repair` option requires that you're already authenticated with GitHub CLI. If not authenticated, it will show helpful instructions for manual authentication.
+
+### Disabling Auto-Login
+
+By default, if you're not authenticated, the tool will automatically start the GitHub CLI login process. You can disable this behavior:
+
+```bash
+# Fail immediately if not authenticated (don't auto-login)
+gh-setup-git-identity --no-auto-login
+```
+
+This is useful in scripts or automated environments where you want to fail fast rather than wait for an interactive login prompt.
 
 ## Library Usage
 

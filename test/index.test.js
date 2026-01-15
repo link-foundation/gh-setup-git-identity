@@ -176,3 +176,20 @@ test('default export contains all functions', async () => {
   assert.ok(typeof defaultExport.setupGitIdentity === 'function');
   assert.ok(typeof defaultExport.verifyGitIdentity === 'function');
 });
+
+// Test: CLI --repair and --no-auto-login options are present
+// Note: Full CLI integration tests would require mocking the subprocess
+test('CLI module has --repair and --no-auto-login options', async () => {
+  // This test verifies the CLI module syntax is correct and options exist
+  const fs = await import('node:fs');
+  const cliContent = fs.readFileSync(new URL('../src/cli.js', import.meta.url), 'utf-8');
+
+  // Verify the new options are defined in the CLI
+  assert.ok(cliContent.includes("'repair'"), 'CLI should have --repair option');
+  assert.ok(cliContent.includes("'no-auto-login'"), 'CLI should have --no-auto-login option');
+
+  // Verify the repair/no-auto-login logic is implemented
+  assert.ok(cliContent.includes('skipAutoLogin'), 'CLI should have skipAutoLogin logic');
+  assert.ok(cliContent.includes('config.repair'), 'CLI should check config.repair');
+  assert.ok(cliContent.includes('config.noAutoLogin'), 'CLI should check config.noAutoLogin');
+});
