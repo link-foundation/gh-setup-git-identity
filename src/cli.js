@@ -44,6 +44,16 @@ const config = makeConfig({
         description: 'Verify current git identity configuration',
         default: false
       })
+      .option('repair', {
+        type: 'boolean',
+        description: 'Repair git identity configuration without triggering login (requires existing authentication)',
+        default: false
+      })
+      .option('no-auto-login', {
+        type: 'boolean',
+        description: 'Disable automatic login if not authenticated (exit with error instead)',
+        default: false
+      })
       // gh auth login options
       .option('hostname', {
         type: 'string',
@@ -108,6 +118,8 @@ const config = makeConfig({
       .example('$0 --scopes repo,user,gist', 'Authenticate with custom scopes')
       .example('$0 --git-protocol ssh', 'Use SSH protocol for git operations')
       .example('$0 --with-token < token.txt', 'Authenticate using a token file')
+      .example('$0 --repair', 'Repair git identity without triggering login')
+      .example('$0 --no-auto-login', 'Fail if not authenticated instead of auto-login')
       .help('h')
       .alias('h', 'help')
       .version('0.1.0')
@@ -186,7 +198,36 @@ async function main() {
     // Check if gh is authenticated
     const authenticated = await isGhAuthenticated({ verbose: config.verbose });
 
+    // Determine if auto-login should be disabled
+    // --repair implies no auto-login (it's meant to fix config without triggering login)
+    // --no-auto-login explicitly disables auto-login
+    const skipAutoLogin = config.repair || config.noAutoLogin;
+
     if (!authenticated) {
+      if (skipAutoLogin) {
+        // In repair mode or with --no-auto-login, don't attempt to login
+        console.error('GitHub CLI is not authenticated.');
+        if (config.repair) {
+          console.error('');
+          console.error('The --repair option requires existing authentication.');
+          console.error('Please authenticate first using one of these methods:');
+        } else {
+          console.error('');
+          console.error('Automatic login is disabled (--no-auto-login).');
+          console.error('Please authenticate manually using one of these methods:');
+        }
+        console.error('');
+        console.error('  # Option 1: Interactive web-based login');
+        console.error(`  gh auth login -h ${config.hostname} -s ${config.scopes} --git-protocol ${config.gitProtocol} --web`);
+        console.error('');
+        console.error('  # Option 2: Token-based login');
+        console.error('  echo "ghp_your_token" | gh auth login --with-token');
+        console.error('');
+        console.error('  # Option 3: Use GH_TOKEN environment variable');
+        console.error('  export GH_TOKEN="ghp_your_token"');
+        process.exit(1);
+      }
+
       console.log('GitHub CLI is not authenticated. Starting authentication...');
       console.log('');
 
