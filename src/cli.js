@@ -6,8 +6,11 @@
  * Command-line interface for setting up git identity based on GitHub user
  */
 
+import { readFileSync } from 'node:fs';
 import { makeConfig } from 'lino-arguments';
 import { setupGitIdentity, isGhAuthenticated, runGhAuthLogin, runGhAuthSetupGit, verifyGitIdentity, defaultAuthOptions } from './index.js';
+
+const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 
 // Parse command-line arguments with environment variable and .lenv support
 const config = makeConfig({
@@ -122,7 +125,7 @@ const config = makeConfig({
       .example('$0 --no-auto-login', 'Fail if not authenticated instead of auto-login')
       .help('h')
       .alias('h', 'help')
-      .version('0.1.0')
+      .version(version)
       .strict(),
 });
 
