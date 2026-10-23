@@ -1,0 +1,10 @@
+bun add v1.4.3 (c6da4a4d3)
+Resolving dependencies
+Resolved, downloaded and extracted [2]
+Saved lockfile
+
+installed command-stream@2.4.0 with binaries:
+ - $fy
+ - command-stream
+
+32 packages installed [592.00ms]

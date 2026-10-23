@@ -1,0 +1,91 @@
+### version-and-commit.mjs (HEAD)
+Parsed configuration: {
+  mode: "changeset",
+  bumpType: "",
+  description: "(none)",
+}
+Checking for remote changes...
+From $WORK/origin
+ * branch            main       -> FETCH_HEAD
+95f27deea29b85f68808a0cbacc893fdd5a10261
+95f27deea29b85f68808a0cbacc893fdd5a10261
+Current version: 0.8.0
+Running changeset version...
+
+> gh-setup-git-identity@0.8.0 changeset:version
+> bun scripts/changeset-version.mjs
+
+Running changeset version...
+🦋  All files have been updated. Review them and commit at your leisure
+
+Synchronizing package-lock.json...
+
+up to date, audited 123 packages in 4s
+
+13 packages are looking for funding
+  run `npm fund` for details
+
+17 high severity vulnerabilities
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+Version bump complete with synchronized package-lock.json
+New version: 0.8.1
+ D .changeset/fix-cli-version.md
+ M CHANGELOG.md
+ M package-lock.json
+ M package.json
+Changes detected, committing...
+[main 3e9c63a] 0.8.1
+ 4 files changed, 9 insertions(+), 8 deletions(-)
+ delete mode 100644 .changeset/fix-cli-version.md
+To $WORK/origin.git
+   95f27de..3e9c63a  main -> main
+Version bump committed and pushed to main
+exit=0
+### publish-to-npm.mjs (HEAD, changeset:publish = 'exit 1')
+From $WORK/origin
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+Current version to publish: 0.8.1
+Checking if version 0.8.1 is already published...
+npm error code E404
+npm error 404 No match found for version 0.8.1
+npm error 404
+npm error 404  The requested resource 'gh-setup-git-identity@0.8.1' could not be found or you do not have permission to access it.
+npm error 404
+npm error 404 Note that you can also install from a
+npm error 404 tarball, folder, http url, or git url.
+npm error A complete log of this run can be found in: ~/.npm/_logs/2026-10-23T07_45_12_886Z-debug-0.log
+Version 0.8.1 not found on npm, proceeding with publish...
+Publish attempt 1 of 3...
+
+> gh-setup-git-identity@0.8.1 changeset:publish
+> exit 1
+
+Publish failed, waiting 0.01s before retry...
+Publish attempt 2 of 3...
+
+> gh-setup-git-identity@0.8.1 changeset:publish
+> exit 1
+
+Publish failed, waiting 0.01s before retry...
+Publish attempt 3 of 3...
+
+> gh-setup-git-identity@0.8.1 changeset:publish
+> exit 1
+
+Failed to publish after 3 attempts
+exit=1
+### GITHUB_OUTPUT
+new_version=0.8.1
+version_committed=true
+### origin/main
+3e9c63a 0.8.1
+95f27de seed
