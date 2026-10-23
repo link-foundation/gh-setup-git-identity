@@ -1,5 +1,11 @@
 # gh-setup-git-identity
 
+## 0.8.1
+
+### Patch Changes
+
+- 2c3fcc4: Read the CLI version from the installed package's package.json so --version stays correct across releases and working directories.
+
 ## 0.8.0
 
 ### Minor Changes
