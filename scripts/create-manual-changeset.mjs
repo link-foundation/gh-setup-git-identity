@@ -12,15 +12,14 @@
 
 import { writeFileSync } from 'fs';
 import { randomBytes } from 'crypto';
+import { USE_M_URL, COMMAND_STREAM, LINO_ARGUMENTS } from './release-deps.mjs';
 
 // Load use-m dynamically
-const { use } = eval(
-  await (await fetch('https://unpkg.com/use-m/use.js')).text()
-);
+const { use } = eval(await (await fetch(USE_M_URL)).text());
 
 // Import link-foundation libraries
-const { $ } = await use('command-stream');
-const { makeConfig } = await use('lino-arguments');
+const { $ } = await use(COMMAND_STREAM);
+const { makeConfig } = await use(LINO_ARGUMENTS);
 
 // Parse CLI arguments using lino-arguments
 const config = makeConfig({
