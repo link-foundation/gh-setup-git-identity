@@ -13,15 +13,18 @@
  */
 
 import { readFileSync, appendFileSync, readdirSync } from 'fs';
+import { USE_M_URL, COMMAND_STREAM, LINO_ARGUMENTS } from './release-deps.mjs';
 
 // Load use-m dynamically
-const { use } = eval(
-  await (await fetch('https://unpkg.com/use-m/use.js')).text()
-);
+const { use } = eval(await (await fetch(USE_M_URL)).text());
 
 // Import link-foundation libraries
-const { $ } = await use('command-stream');
-const { makeConfig } = await use('lino-arguments');
+const { $, shell } = await use(COMMAND_STREAM);
+const { makeConfig } = await use(LINO_ARGUMENTS);
+
+// Reject on a non-zero exit code. By default `await $` resolves, so a failed
+// command would be reported as a success (issue #32).
+shell.errexit(true);
 
 // Parse CLI arguments using lino-arguments
 const config = makeConfig({
@@ -177,6 +180,20 @@ async function main() {
       } else {
         console.log('Rebasing on remote main to incorporate changes...');
         await $`git rebase origin/main`;
+
+        // A re-run after a failed publish: the version commit on remote main
+        // already consumed the changesets. Report the version as released, so
+        // the publish step runs and publishes it if it is missing from npm.
+        if (mode === 'changeset' && countChangesets() === 0) {
+          const version = await getVersion();
+          console.log(
+            `Remote main already consumed the changesets (version ${version}).`
+          );
+          setOutput('version_committed', 'false');
+          setOutput('already_released', 'true');
+          setOutput('new_version', version);
+          return;
+        }
       }
     }
 

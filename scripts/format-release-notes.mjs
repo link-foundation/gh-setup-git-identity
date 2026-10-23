@@ -21,14 +21,14 @@
  * Note: Uses --release-version instead of --version to avoid conflict with yargs' built-in --version flag.
  */
 
+import { USE_M_URL, COMMAND_STREAM, LINO_ARGUMENTS } from './release-deps.mjs';
+
 // Load use-m dynamically
-const { use } = eval(
-  await (await fetch('https://unpkg.com/use-m/use.js')).text()
-);
+const { use } = eval(await (await fetch(USE_M_URL)).text());
 
 // Import link-foundation libraries
-const { $ } = await use('command-stream');
-const { makeConfig } = await use('lino-arguments');
+const { $ } = await use(COMMAND_STREAM);
+const { makeConfig } = await use(LINO_ARGUMENTS);
 
 // Parse CLI arguments using lino-arguments
 // Note: Using --release-version instead of --version to avoid conflict with yargs' built-in --version flag

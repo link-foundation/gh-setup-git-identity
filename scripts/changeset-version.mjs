@@ -13,13 +13,17 @@
  * - command-stream: Modern shell command execution with streaming support
  */
 
+import { USE_M_URL, COMMAND_STREAM } from './release-deps.mjs';
+
 // Load use-m dynamically
-const { use } = eval(
-  await (await fetch('https://unpkg.com/use-m/use.js')).text()
-);
+const { use } = eval(await (await fetch(USE_M_URL)).text());
 
 // Import command-stream for shell command execution
-const { $ } = await use('command-stream');
+const { $, shell } = await use(COMMAND_STREAM);
+
+// Reject on a non-zero exit code. By default `await $` resolves, so a failed
+// command would be reported as a success (issue #32).
+shell.errexit(true);
 
 try {
   console.log('Running changeset version...');

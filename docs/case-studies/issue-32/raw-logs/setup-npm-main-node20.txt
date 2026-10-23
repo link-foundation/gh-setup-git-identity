@@ -1,0 +1,12 @@
+10.8.2
+Current npm version: 10.8.2
+npm error code EBADENGINE
+npm error engine Unsupported engine
+npm error engine Not compatible with your version of node/npm: npm@12.2.1
+npm error notsup Not compatible with your version of node/npm: npm@12.2.1
+npm error notsup Required: {"node":"^22.22.2 || ^24.15.0 || >=26.0.0"}
+npm error notsup Actual:   {"npm":"10.8.2","node":"v20.20.2"}
+npm error A complete log of this run can be found in: ~/.npm/_logs/2026-10-23T07_41_06_874Z-debug-0.log
+10.8.2
+Updated npm version: 10.8.2
+exit=0

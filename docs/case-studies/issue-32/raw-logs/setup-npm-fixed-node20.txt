@@ -1,0 +1,8 @@
+Current npm version: 10.8.2
+Installing npm@11...
+
+removed 65 packages, and changed 112 packages in 8s
+
+15 packages are looking for funding
+  run `npm fund` for details
+Updated npm version: 11.21.1

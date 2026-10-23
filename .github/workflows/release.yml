@@ -278,3 +278,34 @@ jobs:
             2. Merge this PR to main
             3. The automated release workflow will create a version PR
             4. Merge the version PR to publish to npm and create a GitHub release
+
+  # Report a failed release on main - opens (or comments on) a GitHub issue,
+  # so that a merged change does not sit unpublished unnoticed (issue #32)
+  report-release-failure:
+    name: Report Release Failure
+    needs: [lint, test, release, instant-release]
+    if: >-
+      always() && github.ref == 'refs/heads/main' && (
+        needs.release.result == 'failure' || needs.release.result == 'cancelled' ||
+        needs.instant-release.result == 'failure' || needs.instant-release.result == 'cancelled' ||
+        (github.event_name == 'push' && (
+          needs.lint.result == 'failure' || needs.lint.result == 'cancelled' ||
+          needs.test.result == 'failure' || needs.test.result == 'cancelled'))
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Open or update the release failure issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JOB_RESULTS: '{"lint":"${{ needs.lint.result }}","test":"${{ needs.test.result }}","release":"${{ needs.release.result }}","instant-release":"${{ needs.instant-release.result }}"}'
+        run: bun scripts/report-release-failure.mjs

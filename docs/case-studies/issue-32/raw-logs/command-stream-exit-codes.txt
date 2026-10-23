@@ -1,0 +1,4 @@
+shell.errexit available: function
+default: resolved, code=3
+errexit(true): rejected, code=3, Command failed with exit code 3
+errexit(true) + .run({ capture: true }): rejected code=4

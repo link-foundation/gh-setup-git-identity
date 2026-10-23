@@ -1,0 +1,198 @@
+### version-and-commit.mjs (HEAD)
+Parsed configuration: {
+  mode: "changeset",
+  bumpType: "",
+  description: "(none)",
+}
+Checking for remote changes...
+From $WORK/origin
+ * branch            main       -> FETCH_HEAD
+1dc7327cd5c28b38b15efcdcb3bb853ad16ebbac
+1dc7327cd5c28b38b15efcdcb3bb853ad16ebbac
+Current version: 0.8.0
+Running changeset version...
+
+> gh-setup-git-identity@0.8.0 changeset:version
+> bun scripts/changeset-version.mjs
+
+Running changeset version...
+🦋  All files have been updated. Review them and commit at your leisure
+
+Synchronizing package-lock.json...
+
+up to date, audited 123 packages in 1s
+
+13 packages are looking for funding
+  run `npm fund` for details
+
+17 high severity vulnerabilities
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+Version bump complete with synchronized package-lock.json
+New version: 0.8.1
+ D .changeset/fix-cli-version.md
+ M CHANGELOG.md
+ M package-lock.json
+ M package.json
+Changes detected, committing...
+[main ea7d639] 0.8.1
+ 4 files changed, 9 insertions(+), 8 deletions(-)
+ delete mode 100644 .changeset/fix-cli-version.md
+To $WORK/origin.git
+   1dc7327..ea7d639  main -> main
+Version bump committed and pushed to main
+exit=0
+### publish-to-npm.mjs (HEAD, changeset:publish = 'exit 1')
+From $WORK/origin
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+Current version to publish: 0.8.1
+Checking if version 0.8.1 is already published...
+npm error code E404
+npm error 404 No match found for version 0.8.1
+npm error 404
+npm error 404  The requested resource 'gh-setup-git-identity@0.8.1' could not be found or you do not have permission to access it.
+npm error 404
+npm error 404 Note that you can also install from a
+npm error 404 tarball, folder, http url, or git url.
+npm error A complete log of this run can be found in: ~/.npm/_logs/2026-10-23T07_46_16_664Z-debug-0.log
+Version 0.8.1 not found on npm, proceeding with publish...
+Publish attempt 1 of 3...
+
+> gh-setup-git-identity@0.8.1 changeset:publish
+> eval "$PUBLISH_STUB"
+
+Publish failed, waiting 0.01s before retry...
+Publish attempt 2 of 3...
+
+> gh-setup-git-identity@0.8.1 changeset:publish
+> eval "$PUBLISH_STUB"
+
+Publish failed, waiting 0.01s before retry...
+Publish attempt 3 of 3...
+
+> gh-setup-git-identity@0.8.1 changeset:publish
+> eval "$PUBLISH_STUB"
+
+Failed to publish after 3 attempts
+exit=1
+### GITHUB_OUTPUT
+new_version=0.8.1
+version_committed=true
+### origin/main
+ea7d639 0.8.1
+1dc7327 seed
+
+##### re-run of the same commit, changeset:publish succeeds
+sh: 0: getcwd() failed: No such file or directory
+fatal: this operation must be run in a work tree
+warning: Clone succeeded, but checkout failed.
+You can inspect what was checked out with 'git status'
+and retry with 'git restore --source=HEAD :/'
+
+### version-and-commit.mjs (HEAD)
+Parsed configuration: {
+  mode: "changeset",
+  bumpType: "",
+  description: "(none)",
+}
+Checking for remote changes...
+From $WORK/origin
+ * branch            main       -> FETCH_HEAD
+1dc7327cd5c28b38b15efcdcb3bb853ad16ebbac
+ea7d63965a6ea008dbff8bfab7b05752d8d6d5fb
+Remote main has advanced (local: 1dc7327cd5c28b38b15efcdcb3bb853ad16ebbac, remote: ea7d63965a6ea008dbff8bfab7b05752d8d6d5fb)
+This may indicate a previous attempt partially succeeded.
+{
+  "name": "gh-setup-git-identity",
+  "version": "0.8.1",
+  "description": "A tool to setup git identity based on current gh user",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "gh-setup-git-identity": "src/cli.js"
+  },
+  "scripts": {
+    "test": "bun test",
+    "test:bun": "bun test",
+    "test:deno": "deno test --allow-all",
+    "lint": "bun build src/index.js --target=bun --format=esm --outfile=/dev/null && bun build src/cli.js --target=bun --format=esm --outfile=/dev/null",
+    "changeset": "changeset",
+    "changeset:version": "bun scripts/changeset-version.mjs",
+    "changeset:publish": "eval \"$PUBLISH_STUB\"",
+    "changeset:status": "changeset status --since=origin/main"
+  },
+  "keywords": [
+    "github",
+    "git",
+    "identity",
+    "config",
+    "cli",
+    "setup"
+  ],
+  "author": "Link Foundation",
+  "license": "Unlicense",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/link-foundation/gh-setup-git-identity.git"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "dependencies": {
+    "lino-arguments": "^0.2.1",
+    "log-lazy": "^1.0.4",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.7",
+    "test-anywhere": "^0.7.0"
+  }
+}
+Remote version: 0.8.1
+Rebasing on remote main to incorporate changes...
+                                                                                Successfully rebased and updated refs/heads/main.
+Current version: 0.8.1
+Running changeset version...
+
+> gh-setup-git-identity@0.8.1 changeset:version
+> bun scripts/changeset-version.mjs
+
+Running changeset version...
+🦋  warn No unreleased changesets found, exiting.
+
+Synchronizing package-lock.json...
+
+up to date, audited 123 packages in 1s
+
+13 packages are looking for funding
+  run `npm fund` for details
+
+17 high severity vulnerabilities
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+Version bump complete with synchronized package-lock.json
+New version: 0.8.1
+No changes to commit
+exit=0
+### publish step skipped (no version_committed/already_released)
+### GITHUB_OUTPUT
+new_version=0.8.1
+version_committed=false
+### origin/main
+ea7d639 0.8.1
+1dc7327 seed
