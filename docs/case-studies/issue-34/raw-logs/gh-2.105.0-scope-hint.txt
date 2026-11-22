@@ -1,0 +1,13 @@
+$ gh --version
+gh version 2.105.0 (2026-11-17)
+https://github.com/cli/cli/releases/tag/v2.105.0
+Exit status 0
+$ gh api --hostname 127.0.0.1 user/emails
+{"message":"Not Found"}
+gh: Not Found (HTTP 404)
+gh: This API operation needs the "user" scope. To request it, run:  gh auth refresh -h 127.0.0.1 -s user
+Exit status 1
+$ gh auth refresh -h 127.0.0.1 -s user
+The value of the GH_ENTERPRISE_TOKEN environment variable is being used for authentication.
+To refresh credentials stored in GitHub CLI, first clear the value from the environment.
+Exit status 1

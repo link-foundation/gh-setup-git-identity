@@ -1,0 +1,3 @@
+Check for Changesets	Check for changesets	2026-11-22T16:52:12.0919378Z ##[error]No changeset found. Please add a changeset by running 'npm run changeset' and commit the result.
+Check for Changesets	Check for changesets	2026-11-22T16:52:12.0931353Z Found 0 changeset file(s)
+Check for Changesets	Check for changesets	2026-11-22T16:52:12.0933550Z ##[error]Process completed with exit code 1.

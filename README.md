@@ -33,7 +33,7 @@ gh-setup-git-identity
 
 - **Automatic identity setup**: Fetches username and email from GitHub
 - **Global and local configuration**: Configure git globally or per-repository
-- **Authentication check**: Prompts you to login if not authenticated
+- **Authentication recovery**: Starts login when signed out or when the active credential lacks email access
 - **Git credential helper setup**: Automatically runs `gh auth setup-git` to configure git to use GitHub CLI for HTTPS authentication
 - **Dry-run mode**: Preview changes without making them
 - **Cross-platform**: Works on macOS, Linux, and Windows
@@ -94,14 +94,14 @@ Git Identity Options:
   --dry-run, --dry     Dry run - show what would be done without making changes
   --verify             Verify current git identity configuration
   --repair             Repair git identity without triggering login (requires existing auth)
-  --no-auto-login      Disable automatic login if not authenticated
+  --no-auto-login      Disable automatic login and re-login
   --verbose, -v        Enable verbose output
 
 GitHub Authentication Options:
   --hostname           GitHub hostname to authenticate with (default: github.com)
   --scopes, -s         Authentication scopes, comma-separated (default: repo,workflow,user,read:org,gist)
   --git-protocol, -p   Protocol for git operations: ssh or https (default: https)
-  --web, -w            Open a browser to authenticate (default: true)
+  --web, -w            Open a browser to authenticate (default unless using --with-token)
   --with-token         Read token from standard input
   --skip-ssh-key       Skip generate/upload SSH key prompt
   --insecure-storage   Save credentials in plain text instead of credential store
@@ -158,6 +158,14 @@ If automatic authentication fails, you can run the commands manually:
 printf "y" | gh auth login -h github.com -s repo,workflow,user,read:org,gist --git-protocol https --web
 gh auth setup-git -h github.com
 ```
+
+### When the Active Account Lacks Email Access
+
+GitHub CLI can be signed in with a credential that cannot read the account's primary email. If `gh api user/emails` reports missing email access, the CLI starts `gh auth login` once and retries both identity lookups for the account you authorize. Recovery uses the configured hostname and login options. For OAuth login, it adds the reported email scope when your requested scopes omit both `user` and `user:email`.
+
+If an environment token is active, replace it with a classic token that has `user:email` or `user`, or with a fine-grained user token that has **Email addresses: Read**. To use stored credentials or sign in with the browser, clear the environment token for the target host before rerunning the tool. [GitHub's email API permissions](https://docs.github.com/en/rest/users/emails#list-email-addresses-for-the-authenticated-user)
+
+Use `--verbose` to see the authentication decision, login command and retry. The incident transcript, root cause and tests are in the [issue #34 case study](./docs/case-studies/issue-34/).
 
 ### Successful Run
 
@@ -226,18 +234,18 @@ This is useful when:
 - The `user.name` or `user.email` was accidentally cleared or corrupted
 - You want to reconfigure git identity without going through the login flow again
 
-The `--repair` option requires that you're already authenticated with GitHub CLI. If not authenticated, it will show helpful instructions for manual authentication.
+The `--repair` option requires an existing GitHub CLI login with access to the primary email. It reports authentication or permission errors without starting login.
 
 ### Disabling Auto-Login
 
-By default, if you're not authenticated, the tool will automatically start the GitHub CLI login process. You can disable this behavior:
+By default, the tool starts GitHub CLI login when signed out or when the active account lacks email access. You can disable automatic login:
 
 ```bash
-# Fail immediately if not authenticated (don't auto-login)
+# Require a usable existing login
 gh-setup-git-identity --no-auto-login
 ```
 
-This is useful in scripts or automated environments where you want to fail fast rather than wait for an interactive login prompt.
+Use `--dry-run` to preview identity changes with an existing login. It skips login and Git configuration writes.
 
 ## Library Usage
 
@@ -270,6 +278,8 @@ const result2 = await setupGitIdentity({
 #### `isGhAuthenticated(options?)`
 
 Check if GitHub CLI is authenticated.
+
+Pass `options.hostname` to check the active account on that host.
 
 **Returns:** `Promise<boolean>`
 
@@ -326,6 +336,8 @@ Default authentication options object that can be imported and used as a referen
 
 Get GitHub user information (username and primary email).
 
+Pass `options.hostname` to query a specific host.
+
 **Returns:** `Promise<{username: string, email: string}>`
 
 #### `setupGitIdentity(options?)`
@@ -334,6 +346,8 @@ Setup git identity based on GitHub user.
 
 **Parameters:**
 - `options.scope` - `'global'` or `'local'` (default: `'global'`)
+- `options.hostname` - GitHub host for both identity lookups
+- `options.authOptions` - Opt in to one re-login on an email permission error. Accepts `runGhAuthLogin` options and defaults the host to `github.com` when neither hostname option is set.
 - `options.dryRun` - Preview only, don't make changes (default: `false`)
 - `options.verbose` - Enable verbose logging (default: `false`)
 - `options.logger` - Custom logger (default: `console`)
@@ -403,7 +417,7 @@ For a detailed case study of this issue, see [docs/case-studies/issue-26/](./doc
 
 #### GitHub Authentication Options
 
-- `GH_AUTH_HOSTNAME` - GitHub hostname (default: `github.com`)
+- `GH_AUTH_HOSTNAME` - GitHub hostname (defaults to `GH_HOST`, then `github.com`)
 - `GH_AUTH_SCOPES` - Authentication scopes (default: `repo,workflow,user,read:org,gist`)
 - `GH_AUTH_GIT_PROTOCOL` - Git protocol: `ssh` or `https` (default: `https`)
 - `GH_AUTH_WEB` - Open browser for authentication (default: `true`)

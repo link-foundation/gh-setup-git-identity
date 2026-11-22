@@ -1,0 +1,22 @@
+bun test v1.4.4 (38afee6c8)
+
+test/cli.test.js:
+731 |    * Assert that two values are equal (using strict equality ===)
+732 |    */
+733 |   equal(actual, expected, message) {
+734 |     if (actual !== expected) {
+735 |       const defaultMessage = `Expected ${JSON.stringify(actual)} to equal ${JSON.stringify(expected)}`;
+736 |       throw new Error(message || defaultMessage);
+                                                     ^
+error:
+Error: Failed to get GitHub email: gh: Not Found (HTTP 404)
+gh: This API operation needs the "user" scope. To request it, run:  gh auth refresh -h github.com -s user
+
+      at equal (./node_modules/test-anywhere/src/index.js:736:48)
+      at <anonymous> (./test/cli.test.js:116:10)
+(fail) CLI signs in again when an authenticated account lacks the user scope [227.20ms]
+
+ 0 pass
+ 8 filtered out
+ 1 fail
+Ran 1 test across 1 file. [258.00ms]

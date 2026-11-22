@@ -1,0 +1,19 @@
+bun test v1.4.4 (38afee6c8)
+
+test/cli.test.js:
+(pass) CLI --version matches the package version [87.68ms]
+(pass) CLI --version uses its own package from an unrelated directory [88.49ms]
+(pass) CLI signs in again when an authenticated account lacks the user scope [179.14ms]
+(pass) CLI recovery uses the selected host, flags, scopes and local Git configuration [185.70ms]
+(pass) CLI keeps the original authentication failure when recovery is disabled [438.08ms]
+(pass) CLI attempts recovery once when login is canceled or permissions remain missing [506.62ms]
+(pass) CLI leaves unrelated failures and a usable account on the existing path [462.53ms]
+(pass) CLI keeps dry-run read-only and retains first-time login [575.40ms]
+(pass) CLI still recovers with gh versions without the active-account status flag [157.95ms]
+(pass) CLI explains how to replace an environment token lacking email permission [110.99ms]
+(pass) CLI can read a replacement token from stdin during recovery [160.92ms]
+(pass) Library callers opt in to interactive recovery through setupGitIdentity [202.02ms]
+
+ 12 pass
+ 0 fail
+Ran 12 tests across 1 file. [3.19s]
