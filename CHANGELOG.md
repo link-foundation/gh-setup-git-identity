@@ -1,5 +1,11 @@
 # gh-setup-git-identity
 
+## 0.8.2
+
+### Patch Changes
+
+- e740d67: Retry GitHub login once when the active account cannot read its primary email, then configure Git from the account selected during login. Honor `--repair`, `--no-auto-login`, and `--dry-run` during authentication recovery.
+
 ## 0.8.1
 
 ### Patch Changes
