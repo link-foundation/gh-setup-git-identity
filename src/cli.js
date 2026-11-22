@@ -52,16 +52,16 @@ const config = makeConfig({
         description: 'Repair git identity configuration without triggering login (requires existing authentication)',
         default: false
       })
-      .option('no-auto-login', {
+      .option('auto-login', {
         type: 'boolean',
-        description: 'Disable automatic login if not authenticated (exit with error instead)',
-        default: false
+        description: 'Allow automatic login and re-login (disable with --no-auto-login)',
+        default: true
       })
       // gh auth login options
       .option('hostname', {
         type: 'string',
         description: 'GitHub hostname to authenticate with',
-        default: getenv('GH_AUTH_HOSTNAME', defaultAuthOptions.hostname)
+        default: getenv('GH_AUTH_HOSTNAME', getenv('GH_HOST', defaultAuthOptions.hostname))
       })
       .option('scopes', {
         alias: 's',
@@ -79,8 +79,8 @@ const config = makeConfig({
       .option('web', {
         alias: 'w',
         type: 'boolean',
-        description: 'Open a browser to authenticate',
-        default: getenv('GH_AUTH_WEB', defaultAuthOptions.web)
+        description: 'Open a browser to authenticate (default unless --with-token is used)',
+        default: getenv('GH_AUTH_WEB') === '' ? undefined : getenv('GH_AUTH_WEB', defaultAuthOptions.web)
       })
       .option('with-token', {
         type: 'boolean',
@@ -122,7 +122,7 @@ const config = makeConfig({
       .example('$0 --git-protocol ssh', 'Use SSH protocol for git operations')
       .example('$0 --with-token < token.txt', 'Authenticate using a token file')
       .example('$0 --repair', 'Repair git identity without triggering login')
-      .example('$0 --no-auto-login', 'Fail if not authenticated instead of auto-login')
+      .example('$0 --no-auto-login', 'Require an existing login with email access')
       .help('h')
       .alias('h', 'help')
       .version(version)
@@ -198,27 +198,32 @@ async function main() {
       process.exit(0);
     }
 
-    // Check if gh is authenticated
-    const authenticated = await isGhAuthenticated({ verbose: config.verbose });
-
-    // Determine if auto-login should be disabled
-    // --repair implies no auto-login (it's meant to fix config without triggering login)
-    // --no-auto-login explicitly disables auto-login
-    const skipAutoLogin = config.repair || config.noAutoLogin;
+    const authenticated = await isGhAuthenticated({ hostname: config.hostname, verbose: config.verbose });
+    const skipAutoLogin = config.repair || !config.autoLogin || config.dryRun;
+    const authOptions = {
+      hostname: config.hostname,
+      scopes: config.scopes,
+      gitProtocol: config.gitProtocol,
+      web: config.web ?? (defaultAuthOptions.web && !config.withToken),
+      withToken: config.withToken,
+      skipSshKey: config.skipSshKey,
+      insecureStorage: config.insecureStorage,
+      clipboard: config.clipboard,
+      verbose: config.verbose
+    };
 
     if (!authenticated) {
       if (skipAutoLogin) {
-        // In repair mode or with --no-auto-login, don't attempt to login
         console.error('GitHub CLI is not authenticated.');
+        console.error('');
         if (config.repair) {
-          console.error('');
           console.error('The --repair option requires existing authentication.');
-          console.error('Please authenticate first using one of these methods:');
+        } else if (config.dryRun) {
+          console.error('The --dry-run option requires existing authentication.');
         } else {
-          console.error('');
           console.error('Automatic login is disabled (--no-auto-login).');
-          console.error('Please authenticate manually using one of these methods:');
         }
+        console.error('Please authenticate manually using one of these methods:');
         console.error('');
         console.error('  # Option 1: Interactive web-based login');
         console.error(`  gh auth login -h ${config.hostname} -s ${config.scopes} --git-protocol ${config.gitProtocol} --web`);
@@ -242,19 +247,6 @@ async function main() {
         console.log('');
       }
 
-      // Prepare auth options from CLI arguments
-      const authOptions = {
-        hostname: config.hostname,
-        scopes: config.scopes,
-        gitProtocol: config.gitProtocol,
-        web: config.web,
-        withToken: config.withToken,
-        skipSshKey: config.skipSshKey,
-        insecureStorage: config.insecureStorage,
-        clipboard: config.clipboard,
-        verbose: config.verbose
-      };
-
       // Automatically run gh auth login with configured options
       const loginSuccess = await runGhAuthLogin(authOptions);
 
@@ -264,37 +256,12 @@ async function main() {
         console.log(`  printf "y" | gh auth login -h ${config.hostname} -s ${config.scopes} --git-protocol ${config.gitProtocol} --web`);
         process.exit(1);
       }
-
-      // After successful login, setup git credential helper
-      // This is required for HTTPS git operations to work properly
-      const setupGitSuccess = await runGhAuthSetupGit({
-        hostname: config.hostname,
-        verbose: config.verbose
-      });
-
-      if (!setupGitSuccess) {
-        console.log('');
-        console.log('Warning: Failed to setup git credential helper. You may need to run manually:');
-        console.log(`  gh auth setup-git -h ${config.hostname}`);
-        // Continue anyway, as identity setup might still work
-      }
-    } else {
-      // Even if already authenticated, ensure git credential helper is configured
-      // This helps fix cases where gh auth login was run but gh auth setup-git wasn't
-      const setupGitSuccess = await runGhAuthSetupGit({
-        hostname: config.hostname,
-        verbose: config.verbose
-      });
-
-      if (!setupGitSuccess && config.verbose) {
-        console.log('Note: Git credential helper may not be configured. Consider running:');
-        console.log(`  gh auth setup-git -h ${config.hostname}`);
-      }
     }
 
     // Prepare options
     const options = {
       scope,
+      hostname: config.hostname,
       dryRun: config.dryRun,
       verbose: config.verbose
     };
@@ -308,8 +275,20 @@ async function main() {
       console.log('DRY MODE - No actual changes will be made');
     }
 
-    // Setup git identity
-    const result = await setupGitIdentity(options);
+    const result = await setupGitIdentity({
+      ...options,
+      // A first-time login already used this invocation's one login attempt.
+      authOptions: authenticated && !skipAutoLogin ? authOptions : undefined
+    });
+
+    if (!options.dryRun) {
+      const setupGitSuccess = await runGhAuthSetupGit(options);
+      if (!setupGitSuccess) {
+        console.log('');
+        console.log('Warning: Failed to setup git credential helper. You may need to run manually:');
+        console.log(`  gh auth setup-git -h ${config.hostname}`);
+      }
+    }
 
     // Display results
     console.log('');

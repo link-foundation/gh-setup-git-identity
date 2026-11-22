@@ -101,7 +101,7 @@ function execInteractiveCommand(command, args = [], options = {}) {
 
     child.on('close', (exitCode) => {
       resolve({
-        exitCode: exitCode || 0
+        exitCode: exitCode ?? 1
       });
     });
 
@@ -169,7 +169,7 @@ export async function runGhAuthLogin(options = {}) {
   }
 
   // Add scopes
-  if (scopes) {
+  if (scopes && !withToken) {
     args.push('-s', scopes);
   }
 
@@ -268,17 +268,28 @@ export async function runGhAuthSetupGit(options = {}) {
  * Check if GitHub CLI is authenticated
  *
  * @param {Object} options - Options
+ * @param {string} options.hostname - Check the active account for this host
  * @param {boolean} options.verbose - Enable verbose logging
  * @param {Object} options.logger - Custom logger
  * @returns {Promise<boolean>} True if authenticated
  */
 export async function isGhAuthenticated(options = {}) {
-  const { verbose = false, logger = console } = options;
+  const { hostname, verbose = false, logger = console } = options;
   const log = createDefaultLogger({ verbose, logger });
+  const args = ['auth', 'status'];
+  if (hostname) {
+    args.push('--hostname', hostname, '--active');
+  }
 
-  log.debug(() => 'Checking GitHub CLI authentication status...');
+  log.debug(() => `Running: gh ${args.join(' ')}`);
 
-  const result = await execCommand('gh', ['auth', 'status']);
+  let result = await execCommand('gh', args);
+  if (hostname && result.exitCode !== 0 && /^unknown flag: --active\r?$/m.test(result.stderr)) {
+    // Older GitHub CLI releases can scope status to a host but cannot filter by active account.
+    args.pop();
+    log.debug(() => `Running: gh ${args.join(' ')}`);
+    result = await execCommand('gh', args);
+  }
 
   if (result.exitCode !== 0) {
     log.debug(() => `GitHub CLI is not authenticated: ${result.stderr}`);
@@ -293,17 +304,18 @@ export async function isGhAuthenticated(options = {}) {
  * Get GitHub username from authenticated user
  *
  * @param {Object} options - Options
+ * @param {string} options.hostname - GitHub hostname (defaults to gh's API host)
  * @param {boolean} options.verbose - Enable verbose logging
  * @param {Object} options.logger - Custom logger
  * @returns {Promise<string>} GitHub username
  */
 export async function getGitHubUsername(options = {}) {
-  const { verbose = false, logger = console } = options;
+  const { hostname, verbose = false, logger = console } = options;
   const log = createDefaultLogger({ verbose, logger });
 
   log.debug(() => 'Getting GitHub username...');
 
-  const result = await execCommand('gh', ['api', 'user', '--jq', '.login']);
+  const result = await queryGitHub('user', '.login', hostname);
 
   if (result.exitCode !== 0) {
     throw new Error(`Failed to get GitHub username: ${result.stderr}`);
@@ -315,23 +327,58 @@ export async function getGitHubUsername(options = {}) {
   return username;
 }
 
+function queryGitHub(endpoint, filter, hostname) {
+  const args = ['api', endpoint, '--jq', filter];
+  if (hostname) {
+    args.push('--hostname', hostname);
+  }
+  return execCommand('gh', args);
+}
+
+function environmentTokenVariable(hostname) {
+  const host = (hostname || process.env.GH_HOST || defaultAuthOptions.hostname).toLowerCase();
+  const useCloudToken = /(?:^|\.)(?:github\.com|github\.localhost)$|\.ghe\.com$/.test(host);
+  const names = useCloudToken
+    ? ['GH_TOKEN', 'GITHUB_TOKEN']
+    : ['GH_ENTERPRISE_TOKEN', 'GITHUB_ENTERPRISE_TOKEN'];
+  return names.find((name) => process.env[name]);
+}
+
+class GitHubEmailPermissionError extends Error {
+  constructor(stderr, requiredScope, tokenVariable) {
+    const guidance = tokenVariable
+      ? `\nRemove or replace ${tokenVariable}. Use a classic token with user:email (or user), or a fine-grained token with Email addresses: Read.`
+      : '';
+    super(`Failed to get GitHub email: ${stderr}${guidance}`);
+    this.requiredScope = requiredScope;
+    this.tokenVariable = tokenVariable;
+  }
+}
+
 /**
  * Get primary email from GitHub user
  *
  * @param {Object} options - Options
+ * @param {string} options.hostname - GitHub hostname (defaults to gh's API host)
  * @param {boolean} options.verbose - Enable verbose logging
  * @param {Object} options.logger - Custom logger
  * @returns {Promise<string>} Primary email address
  */
 export async function getGitHubEmail(options = {}) {
-  const { verbose = false, logger = console } = options;
+  const { hostname, verbose = false, logger = console } = options;
   const log = createDefaultLogger({ verbose, logger });
 
   log.debug(() => 'Getting GitHub primary email...');
 
-  const result = await execCommand('gh', ['api', 'user/emails', '--jq', '.[] | select(.primary==true) | .email']);
+  const result = await queryGitHub('user/emails', '.[] | select(.primary==true) | .email', hostname);
 
   if (result.exitCode !== 0) {
+    const scope = result.stderr.match(/^gh: This API operation needs the "(user(?::email)?)" scope\./m)?.[1];
+    const tokenDenied = /^gh: Resource not accessible by (?:personal access token|integration) \(HTTP 403\)$/m.test(result.stderr);
+    if (scope || tokenDenied) {
+      const tokenVariable = environmentTokenVariable(hostname);
+      throw new GitHubEmailPermissionError(result.stderr, scope || 'user:email', tokenVariable);
+    }
     throw new Error(`Failed to get GitHub email: ${result.stderr}`);
   }
 
@@ -350,17 +397,20 @@ export async function getGitHubEmail(options = {}) {
  * Get GitHub user information (username and primary email)
  *
  * @param {Object} options - Options
+ * @param {string} options.hostname - GitHub hostname (defaults to gh's API host)
  * @param {boolean} options.verbose - Enable verbose logging
  * @param {Object} options.logger - Custom logger
  * @returns {Promise<{username: string, email: string}>} User information
  */
 export async function getGitHubUserInfo(options = {}) {
-  const [username, email] = await Promise.all([
+  const [username, email] = await Promise.allSettled([
     getGitHubUsername(options),
     getGitHubEmail(options)
   ]);
 
-  return { username, email };
+  if (username.status === 'rejected') throw username.reason;
+  if (email.status === 'rejected') throw email.reason;
+  return { username: username.value, email: email.value };
 }
 
 /**
@@ -426,6 +476,8 @@ export async function getGitConfig(key, options = {}) {
  * Setup git identity based on GitHub user
  *
  * @param {Object} options - Options
+ * @param {string} options.hostname - GitHub hostname (defaults to gh's API host without authOptions)
+ * @param {Object} options.authOptions - Opt in to one login on an email permission error, with runGhAuthLogin options
  * @param {string} options.scope - 'global' or 'local' (default: 'global')
  * @param {boolean} options.dryRun - Dry run mode (default: false)
  * @param {boolean} options.verbose - Enable verbose logging (default: false)
@@ -436,16 +488,39 @@ export async function setupGitIdentity(options = {}) {
   const {
     scope = 'global',
     dryRun = false,
+    authOptions,
     verbose = false,
     logger = console
   } = options;
 
+  const hostname = options.hostname ?? authOptions?.hostname ?? (authOptions ? defaultAuthOptions.hostname : undefined);
   const log = createDefaultLogger({ verbose, logger });
+  const userInfoOptions = { hostname, verbose, logger };
 
   log(() => '\nFetching GitHub user information...');
 
-  // Get GitHub user info
-  const { username, email } = await getGitHubUserInfo({ verbose, logger });
+  let identity;
+  try {
+    identity = await getGitHubUserInfo(userInfoOptions);
+  } catch (error) {
+    if (!(error instanceof GitHubEmailPermissionError) || !authOptions || dryRun || error.tokenVariable) {
+      throw error;
+    }
+
+    log.debug(() => `GitHub email lookup failed on ${hostname}: ${error.message}`);
+    log(() => 'The current GitHub credential cannot read your email addresses. Starting authentication...');
+    const scopes = (authOptions.scopes ?? defaultAuthOptions.scopes).split(',').map((value) => value.trim()).filter(Boolean);
+    if (!scopes.includes('user') && !scopes.includes('user:email')) {
+      scopes.push(error.requiredScope);
+    }
+    const loginSuccess = await runGhAuthLogin({ ...authOptions, hostname, scopes: scopes.join(','), verbose, logger });
+    if (!loginSuccess) throw error;
+
+    log.debug(() => `Retrying GitHub username and primary email lookup on ${hostname}`);
+    // Login can change the active account, so refetch both identity fields.
+    identity = await getGitHubUserInfo(userInfoOptions);
+  }
+  const { username, email } = identity;
 
   log(() => `  GitHub user: ${username}`);
   log(() => `  GitHub email: ${email}`);
