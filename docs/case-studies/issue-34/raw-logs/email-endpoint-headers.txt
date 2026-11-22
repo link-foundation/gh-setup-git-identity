@@ -1,0 +1,5 @@
+gh version 2.102.0 (2026-09-30)
+https://github.com/cli/cli/releases/tag/v2.102.0
+HTTP/2.0 200 OK
+X-Accepted-Oauth-Scopes: user, user:email
+X-Oauth-Scopes: gist, read:org, repo, user, workflow

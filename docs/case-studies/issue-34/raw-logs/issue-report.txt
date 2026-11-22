@@ -1,0 +1,46 @@
+Source: https://github.com/link-foundation/gh-setup-git-identity/issues/34
+Title: `gh: This API operation needs the "user" scope` must trigger relogin sequence instead of failure
+Created: 2026-11-22T16:05:51Z
+Updated: 2026-11-22T16:07:08Z
+
+Terminal transcript (device code, user, email and container redacted):
+user@container:~$ gh-setup-git-identity
+Git credential helper configured for GitHub CLI
+
+Fetching GitHub user information...
+
+Error: Failed to get GitHub email: gh: Not Found (HTTP 404)
+gh: This API operation needs the "user" scope. To request it, run:  gh auth refresh -h github.com -s user
+user@container:~$ printf "y" | gh auth login -h github.com -s repo,workflow,user,read:org,gist --git-protocol https --web
+
+! Failed to copy one-time code to clipboard
+  No clipboard utilities available. Please install xsel, xclip, wl-clipboard or Termux:API add-on for termux-clipboard-get/set.
+! First copy your one-time code: [REDACTED]
+Open this URL to continue in your web browser: https://github.com/login/device
+✓ Authentication complete.
+- gh config set -h github.com git_protocol https
+✓ Configured git protocol
+! Authentication credentials saved in plain text
+✓ Logged in as example-user
+user@container:~$ gh-setup-git-identity
+Git credential helper configured for GitHub CLI
+
+Fetching GitHub user information...
+  GitHub user: example-user
+  GitHub email: user@example.test
+
+Configuring git (global)...
+  Git identity configured successfully!
+
+  Git configured:
+    user.name:  example-user
+    user.email: user@example.test
+  Scope: global (--global)
+
+Git identity setup complete!
+
+You can verify your configuration with:
+  gh auth status
+  git config --global user.name
+  git config --global user.email
+user@container:~$
